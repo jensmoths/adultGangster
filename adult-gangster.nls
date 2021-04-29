@@ -1,0 +1,69 @@
+
+globals [stash]
+adult-gangsters-own [
+  
+]
+
+
+to processMsg
+  
+  if not empty? incoming-queue [
+    let msg get-message
+    let performative get-performative msg
+    let content get-content msg
+    let sender get-sender msg
+    (ifelse 
+      performative = "informative"[
+        (ifelse
+          content = "1"[]
+          content = "212"[]
+    )]
+    performative = "request"[
+       (ifelse
+          content = "giefdrugs"[
+          add-belief create-belief "wantsdrugs" sender]
+          content = "212"[]
+    )]
+  )]
+  
+end
+
+
+
+to setup-adult-gangsters
+create-adult-gangsters 1[
+    set beliefs ([])
+    set intentions ([])
+    set incoming-queue ([])
+    set shape  "person"
+    set color red
+    set size 1  ; easier to see
+    set label-color red - 2
+
+    setxy random-xcor random-ycor
+    ;setxy 1 1
+
+  ]
+end
+
+
+
+to brf
+ 
+     
+end
+
+
+to deliberateIntentions
+ 
+    ifelse exist-beliefs-of-type "wantsdrugs"
+    [
+    let belief get-belief "wantsdrugs"
+      
+    ]
+    [add-intention "eat" "true" ]
+  
+end
+
+to processinformative
+end
