@@ -1,34 +1,8 @@
-
 globals [stash]
+
 adult-gangsters-own [
   
 ]
-
-
-to processMsg
-  
-  if not empty? incoming-queue [
-    let msg get-message
-    let performative get-performative msg
-    let content get-content msg
-    let sender get-sender msg
-    (ifelse 
-      performative = "informative"[
-        (ifelse
-          content = "1"[]
-          content = "212"[]
-    )]
-    performative = "request"[
-       (ifelse
-          content = "orderDrugs"[
-          add-belief create-belief "wantsDrugs" sender]
-          content = "212"[]
-    )]
-  )]
-  
-end
-
-
 
 to setup-adult-gangsters
   create-children 6[
@@ -69,38 +43,87 @@ create-adult 1[
 end
 
 
-
-to brf
- 
-     
+to processMsg  
+  if not empty? incoming-queue [
+    let msg get-message
+    let performative get-performative msg
+    let content get-content msg
+    let sender get-sender msg
+    (ifelse 
+      performative = "agree"[
+        (ifelse
+          content = "availableForDelivery"[
+          add-belief create-belief "availableForDelivery" sender]
+          content = "212"[]
+    )]
+    performative = "request"[
+       (ifelse
+          content = "orderDrugs"[
+          add-belief create-belief "wantsDrugs" sender]
+          content = "212"[]
+    )]
+      performative = "inform"[
+       (ifelse
+          content = "delivered"[
+          add-belief create-belief "deliveredDrugs" sender]
+          content = "212"[]
+    )]
+  )]  
 end
-
 
 to deliberateIntentions
- 
-    ifelse exist-beliefs-of-type "wantsDrugs"
+    if exist-beliefs-of-type "wantsDrugs"
     [
      let belief get-belief "wantsDrugs"
-     let content belief-content belief
-     show content
-     add-belief create-belief "deliveringDrugs" content
+     let customer belief-content belief
+     show customer
+     add-belief create-belief "deliveringDrugs" customer
      add-intention "requestDelivery" "true"
-      
     ]
-    []
-  
-end
-
-to processinformative
+    if exist-beliefs-of-type "deliveredDrugs"
+    [
+    add-intention "sendLocation" "true"
+    ]
+    
 end
 
 to requestDelivery
   let msg create-message "request"
   set msg add-multiple-receivers [0 1 2 3 4 5] msg
-  set msg add-content "aviableToDeliver?" msg
-  send msg 
+  set msg add-content "availableToDeliver" msg
+  send msg
+  add-intention "orderDelivery" "deliveryOrdered" 
 end
 
-to-report deliveredDrugs
-  
+to orderDelivery
+ if exist-beliefs-of-type "availableForDelivery" 
+  [
+    let msg create-message "inform"
+    let reciever read-first-belief-of-type "availableForDelivery"
+    set msg add-receiver reciever  msg
+    let string "stash"
+    set string word string word word "x" "4" word "y" "4"
+    set string word string word "drop" word word "z" "4" word "q" "4"
+    set msg add-content string msg
+    send msg
+  ]
 end
+
+to-report deliveryOrdered
+  if exist-beliefs-of-type "availableForDelivery" 
+    [
+      report true
+    ]
+  report false
+end
+
+to sendLocation
+  let msg create-message "inform"
+    let reciever belief-content get-belief "deliveringDrugs"
+    set msg add-receiver reciever msg
+    let string "locationDrugs"
+    set string word string word "4" "4"
+    set msg add-content string msg
+    send msg
+end
+
