@@ -20,8 +20,8 @@ to processMsg
     )]
     performative = "request"[
        (ifelse
-          content = "giefdrugs"[
-          add-belief create-belief "wantsdrugs" sender]
+          content = "orderDrugs"[
+          add-belief create-belief "wantsDrugs" sender]
           content = "212"[]
     )]
   )]
@@ -31,14 +31,36 @@ end
 
 
 to setup-adult-gangsters
+  create-children 6[
+  set beliefs ([])
+    set intentions ([])
+    set incoming-queue ([])
+    set shape  "person"
+    set color green
+    set size 1  ; easier to see
+    set label-color green - 2
+    setxy random-xcor random-ycor
+  ]
 create-adult-gangsters 1[
     set beliefs ([])
     set intentions ([])
     set incoming-queue ([])
     set shape  "person"
     set color red
-    set size 1  ; easier to see
+    set size 2  ; easier to see
     set label-color red - 2
+
+    setxy random-xcor random-ycor
+    ;setxy 1 1]
+  ]
+create-adult 1[
+    set beliefs ([])
+    set intentions ([])
+    set incoming-queue ([])
+    set shape  "person"
+    set color yellow
+    set size 2  ; easier to see
+    set label-color yellow - 2
 
     setxy random-xcor random-ycor
     ;setxy 1 1
@@ -56,14 +78,29 @@ end
 
 to deliberateIntentions
  
-    ifelse exist-beliefs-of-type "wantsdrugs"
+    ifelse exist-beliefs-of-type "wantsDrugs"
     [
-    let belief get-belief "wantsdrugs"
+     let belief get-belief "wantsDrugs"
+     let content belief-content belief
+     show content
+     add-belief create-belief "deliveringDrugs" content
+     add-intention "requestDelivery" "true"
       
     ]
-    [add-intention "eat" "true" ]
+    []
   
 end
 
 to processinformative
+end
+
+to requestDelivery
+  let msg create-message "request"
+  set msg add-multiple-receivers [0 1 2 3 4 5] msg
+  set msg add-content "aviableToDeliver?" msg
+  send msg 
+end
+
+to-report deliveredDrugs
+  
 end

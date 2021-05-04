@@ -13,7 +13,9 @@ __includes [
   "communication.nls"
 ]
 
-breed [ adult-gangsters adult-gangster ]
+breed [ adult-gangsters adult-gangster]
+breed [ children childrens ]
+breed [ adult adults ]
 globals [
   time
 ]
@@ -69,6 +71,15 @@ end
 to-report reactiveIntention
   report false
 end
+
+to test
+  ask adult[
+  let msg create-message "request"
+  set msg add-receiver 6 msg
+  set msg add-content "orderDrugs" msg
+    send msg]
+
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -104,7 +115,7 @@ SWITCH
 56
 show_messages
 show_messages
-1
+0
 1
 -1000
 
@@ -115,7 +126,7 @@ BUTTON
 145
 NIL
 go
-NIL
+T
 1
 T
 OBSERVER
