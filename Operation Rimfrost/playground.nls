@@ -1,0 +1,46 @@
+playgrounds-own [
+  nbr-of-adults-here
+  nbr-of-adult-gangsters-here
+  nbr-of-children-here
+  nbr-of-child-gangsters-here
+  nbr-of-police-here
+  max-amount-of-people
+  class
+]
+
+
+to setup-playgrounds
+  set-default-shape playgrounds "playground"
+  let cnt nbr-of-playgrounds ;Copy value from slider to local variable so we can change value
+  let classList ["lowerclass" "middleclass" "upperclass"] ;List with neighborhoods to iterate through to spread houses evenly
+  let it random 2 ;it = item, to iterate classList
+  
+  ; Create nbr-of-houses (value from slider) houses
+  while [cnt > 0] [   
+    let classX item it classList
+    
+    create-playgrounds 1 [
+      set size 2.5
+      set nbr-of-adults-here 0
+      set nbr-of-adult-gangsters-here 0
+      set nbr-of-children-here 0
+      set nbr-of-child-gangsters-here 0
+      set nbr-of-police-here 0
+      set max-amount-of-people 12
+      set class classX
+      
+      ; Randomly place a house where there are no other objects and in the right neighborhood
+      move-to one-of patches with [(not any? turtles-here) and (not any? turtles-on neighbors) and (meaning = classX) and not any? playgrounds in-radius 5]
+      ; Center house on patch (e.g. x = 9, not x = 9.4)
+      move-to patch-here
+    ]
+    
+    ; For spreading houses even in the neighborhoods
+    ifelse (it < 2)
+      [ set it it + 1 ]
+      [ set it 0 ]
+    
+    ; Lower counter for nbr of houses to create
+    set cnt cnt - 1
+  ]
+end

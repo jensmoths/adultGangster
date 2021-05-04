@@ -1,0 +1,41 @@
+meetingplaces-own [
+  class
+]
+
+
+to setup-meetingplaces
+  set-default-shape meetingplaces "target"
+  let cnt nbr-of-meetingplaces ;Copy value from slider to local variable so we can change value
+  let classList ["lowerclass" "middleclass" "upperclass"] ;List with neighborhoods to iterate through to spread houses evenly
+  let it random 2 ;it = item, to iterate classList
+  
+  ; Create nbr-of-houses (value from slider) houses
+  while [cnt > 0] [   
+    let classX item it classList
+    
+    create-meetingplaces 1 [
+      set size 1.5
+      set color red
+      set class classX
+      
+      ; Randomly place a house where there are no other objects and in the right neighborhood
+      move-to one-of patches with [(not any? turtles-here) and (not any? turtles-on neighbors) and (meaning = classX) and not any? meetingplaces in-radius 8]
+      ; Center house on patch (e.g. x = 9, not x = 9.4)
+      move-to patch-here
+    ]
+    
+    ; For spreading houses even in the neighborhoods
+    ifelse (it < 2)
+      [ set it it + 1 ]
+      [ set it 0 ]
+    
+    ; Lower counter for nbr of houses to create
+    set cnt cnt - 1
+  ]
+  
+  ; Ask 10% (rounded down) of meetingplaces to be placed near prison
+  ask n-of floor (nbr-of-meetingplaces * 0.10) meetingplaces [
+    move-to one-of patches with [(not any? turtles-here) and (not any? turtles-on neighbors) and pxcor >= -14 and pxcor <= -4 and pycor >= -19 and pycor <= -4]
+    set class "prisonSquare"
+  ]
+end

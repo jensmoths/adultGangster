@@ -1,0 +1,50 @@
+  drug-delivery-spots-own [
+  nbr-of-drugs
+  money
+  class
+]
+
+to setup-drug-delivery-spots
+  set-default-shape drug-delivery-spots "tree"
+  let cnt nbr-of-drug-delivery-spots ;Copy value from slider to local variable so we can change value
+  let classList ["lowerclass" "middleclass" "upperclass"] ;List with neighborhoods to iterate through to spread houses evenly
+  let classIt random 2 ;it = item, to iterate classList
+  
+  ; Create nbr-of-stash-houses (value from slider) stash-houses
+  while [cnt > 0] [   
+    let classX item classIt classList 
+    
+    create-drug-delivery-spots 1 [
+      set color green - 3
+      set size 2
+      set nbr-of-drugs 0
+      set money 0
+      set class classX
+      
+      ; Randomly place a house where there are no other objects and in the right neighborhood
+      move-to one-of patches with [(not any? turtles-here) and (not any? turtles-on neighbors) and (meaning = classX) and not any? drug-delivery-spots in-radius 4]
+      ; Center house on patch (e.g. x = 9, not x = 9.4)
+      move-to patch-here
+    ]
+    
+    ; For spreading hideouts even in the neighborhoods
+    ifelse (classIt < 2)
+      [ set classIt classIt + 1 ]
+      [ set classIt 0 ]
+    
+    ; Lower counter for nbr of houses to create
+    set cnt cnt - 1   
+  ]
+  
+  ; Ask random half of gang-hideouts to change gang because all are set to belong to red gang when created
+  ask n-of floor (nbr-of-drug-delivery-spots / 6) drug-delivery-spots [
+    set shape "garbage can"
+    set color gray
+  ]
+  
+  ; Ask 10% (rounded down) of drug-delivery-spots to be placed near prison
+  ask n-of floor (nbr-of-drug-delivery-spots * 0.1) drug-delivery-spots [
+    move-to one-of patches with [(not any? turtles-here) and (not any? turtles-on neighbors) and pxcor >= -14 and pxcor <= -4 and pycor >= -19 and pycor <= -4]
+    set class "prisonSquare"
+  ]
+end

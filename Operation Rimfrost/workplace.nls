@@ -1,0 +1,53 @@
+workplaces-own [
+  adults-at-work
+  max-employees
+  salary
+  class
+]
+
+
+to setup-workplaces
+  set-default-shape workplaces "workplace"
+  let cnt nbr-of-workplaces ;Copy value from slider to local variable so we can change value
+  let classList ["lowerclass" "middleclass" "upperclass"] ;List with neighborhoods to iterate through to spread houses evenly
+  let it random 2 ;it = item, to iterate classList
+  
+  ; Create nbr-of-houses (value from slider) houses
+  while [cnt > 0] [   
+    let classX item it classList
+    
+    create-workplaces 1 [
+      set size 2
+      set adults-at-work 0
+      set max-employees random 10 + 10
+      set class classX
+      
+      ; Set salary depending on neighborhood
+      ifelse class = item 0 classList 
+      [ set salary 50 ]
+      [ ifelse class = item 1 classList
+        [ set salary 70 ]
+        [ set salary 100 ]
+      ]
+      
+      ; Randomly place a house where there are no other objects and in the right neighborhood
+      move-to one-of patches with [(not any? turtles-here) and (not any? turtles-on neighbors) and (meaning = classX) and not any? workplaces in-radius 6 ]
+      ; Center house on patch (e.g. x = 9, not x = 9.4)
+      move-to patch-here
+    ]
+    
+    ; For spreading houses even in the neighborhoods
+    ifelse (it < 2)
+      [ set it it + 1 ]
+      [ set it 0 ]
+    
+    ; Lower counter for nbr of houses to create
+    set cnt cnt - 1
+  ]
+  
+  ; Ask 25% (rounded down) of workplaces to be placed near prison
+  ask n-of floor (nbr-of-workplaces * 0.25) workplaces [
+    move-to one-of patches with [(not any? turtles-here) and (not any? turtles-on neighbors) and pxcor >= -14 and pxcor <= -4 and pycor >= -19 and pycor <= -4]
+    set class "prisonSquare"
+  ]
+end

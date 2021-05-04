@@ -1,0 +1,5 @@
+2021.04.30
+	time - har nu värdena 0-23 där 20 ticks ska föreställa en timme
+	label - finns nu en switch i interface för att se en label med breed och who för varje byggnad
+	samtliga byggnader/platser är redo att användas i testning
+	lagt till meetingplaces efter önskemål

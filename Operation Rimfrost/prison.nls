@@ -1,0 +1,22 @@
+prisons-own [
+  nbr-of-adults-here
+  nbr-of-adult-gangsters-here
+]
+
+
+to setup-prisons
+  set-default-shape prisons "tile brick"
+  
+  ; Creates prison-agents on each prison-patch    
+    create-prisons 180 [
+      set size 1
+      set color grey
+      set nbr-of-adults-here 0
+      set nbr-of-adult-gangsters-here 0
+      
+      ; Place prison-agents on prison-patches
+      move-to one-of patches with [not any? turtles-here and pxcor >= -34 and pxcor <= -17 and pycor >= -16 and pycor <= -7]
+      ; Center house on patch (e.g. x = 9, not x = 9.4)
+      move-to patch-here
+    ]
+end

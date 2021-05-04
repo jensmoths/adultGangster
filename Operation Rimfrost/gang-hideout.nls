@@ -1,0 +1,50 @@
+  gang-hideouts-own [
+  adult-gangsters-in-hideout
+  child-gangsters-in-hideout
+  belongs-to-gang
+  nbr-of-drugs
+  nbr-of-weapons
+  class
+]
+
+to setup-gang-hideouts
+  set-default-shape gang-hideouts "gang hideout"
+  let cnt nbr-of-gang-hideouts ;Copy value from slider to local variable so we can change value
+  let classList ["lowerclass" "middleclass" "upperclass"] ;List with neighborhoods to iterate through to spread houses evenly
+  let classIt random 2 ;it = item, to iterate classList
+  
+  ; Create nbr-of-gang-hideouts (value from slider) gang-hideouts
+  while [cnt > 0] [   
+    let classX item classIt classList 
+    
+    create-gang-hideouts 1 [
+      set color red
+      set size 2
+      set adult-gangsters-in-hideout 0
+      set child-gangsters-in-hideout 0
+      set nbr-of-drugs 1000000 ;Can be set lower but for now it is "unlimited" amount of drugs, e.g. for drugs to be added per day instead
+      set nbr-of-weapons random 8
+      set belongs-to-gang "red"
+      set class classX
+      
+      ; Randomly place a gang-hideout where there are no other objects and in the right neighborhood
+      move-to one-of patches with [(not any? turtles-here) and (not any? turtles-on neighbors) and (meaning = classX) and not any? gang-hideouts in-radius 5 ]
+      ;Center house on patch (e.g. x = 9, not x = 9.4)
+      move-to patch-here
+    ]
+    
+    ; For spreading hideouts even in the neighborhoods
+    ifelse (classIt < 2)
+      [ set classIt classIt + 1 ]
+      [ set classIt 0 ]
+    
+    ; Lower counter for nbr of houses to create
+    set cnt cnt - 1   
+  ]
+  
+  ; Ask random half of gang-hideouts to change gang because all are set to belong to red gang when created
+  ask n-of floor (nbr-of-gang-hideouts / 2) gang-hideouts [
+    set color yellow
+    set belongs-to-gang "yellow"
+  ]
+end

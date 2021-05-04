@@ -1,0 +1,78 @@
+; 2021-04-27 Group 8 create map.nls which draws the map for Operation Rimfrost 2021
+;
+; Map for Operation Rimfrost 2021
+;
+; setup-map draws the map
+; Some patches has meaning (prison(prison) and neighborhoods(lowerclass, middleclass, upperclass))
+;
+
+patches-own [meaning]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; SETUP
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+to setup-map
+  draw-neighborhoods
+  draw-sidewalk
+  draw-roads
+  draw-prison
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Setup procedures ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to draw-neighborhoods
+  ;lowerclass
+  ask patches with [pxcor >= -37 and pxcor <= -4 and pycor >= 4 and pycor <= 19]
+  [set pcolor 64
+   set meaning "lowerclass"]
+  ask patch -20 21 [set plabel "Lowerclass"]
+  ;middleclass
+  ask patches with [pxcor >= 4 and pxcor <= 37 and pycor >= -19 and pycor <= -4]
+  [set pcolor 64
+   set meaning "middleclass"]
+  ask patch 20 -21 [set plabel "Middleclass"]
+  ;upperclass
+  ask patches with [pxcor >= 4 and pxcor <= 37 and pycor >= 4 and pycor <= 19]
+  [set pcolor 64
+   set meaning "upperclass"]
+  ask patch 20 21 [set plabel "Upperclass"]
+end
+
+to draw-roads
+  ask patches with [pxcor = 0 or pycor = 0]
+  [set pcolor 9
+   set meaning "white-line"]
+
+  ask patches with [pxcor = 1 or pxcor = -1 or pxcor = 40 or pxcor = -40 or
+                    pycor = -22 or pycor = 1 or pycor = -1 or pycor = 22]
+  [set pcolor grey
+   set meaning "road"]
+end
+
+to draw-sidewalk
+  ask patches with [pxcor = -39 or pxcor = -2 or pxcor = 2 or pxcor = 39 or
+                    pxcor = -38 or pxcor = -3 or pxcor = 3 or pxcor = 38 or
+                    pycor = 21 or pycor = 2 or pycor = -2 or pycor = -21 or
+                    pycor = 20 or pycor = 3 or pycor = -3 or pycor = -20]
+  [ set pcolor brown
+    set meaning "sidewalk"]
+end
+
+to draw-prison
+  ;set background green
+  ask patches with [pxcor >= -37 and pxcor <= -4 and pycor >= -19 and pycor <= -4]
+  [set pcolor 64
+   set meaning "grass"]
+  ;set black border for prison
+  ask patches with [(pxcor >= -35 and pxcor <= -16 and pycor = -6) or
+                    (pxcor >= -35 and pxcor <= -16 and pycor = -17) or
+                    (pycor >= -16 and pycor <= -7 and pxcor = -35) or
+                    (pycor >= -16 and pycor <= -7 and pxcor = -16)]
+  [set pcolor black
+   set meaning "prisonwall"]
+  ;set prison to grey and meaning "prison"
+  ask patches with [pxcor >= -34 and pxcor <= -17 and pycor >= -16 and pycor <= -7]
+  [set pcolor white
+   set meaning "prison"]
+  ask patch -25 -6 [set plabel "Prison"]
+end

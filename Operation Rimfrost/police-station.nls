@@ -1,0 +1,49 @@
+police-stations-own [
+  police-at-station
+  police-on-duty
+  max-employees
+  salary
+  class
+]
+
+
+to setup-police-stations
+  set-default-shape police-stations "police station"
+  let cnt nbr-of-police-stations ;Copy value from slider to local variable so we can change value
+  let classList ["lowerclass" "middleclass" "upperclass"] ;List with neighborhoods to iterate through to spread houses evenly
+  let it random 2 ;it = item, to iterate classList
+  
+  ; Create nbr-of-houses (value from slider) houses
+  while [cnt > 0] [   
+    let classX item it classList
+    
+    create-police-stations 1 [
+      set size 2
+      set police-at-station 0
+      set police-on-duty 0
+      set max-employees random 10 + 10
+      set class classX
+      
+      ; Set salary depending on neighborhood
+      ifelse class = item 0 classList 
+      [ set salary 40 + random 20 ]
+      [ ifelse class = item 1 classList
+        [ set salary 50 + random 20 ]
+        [ set salary 65 + random 20 ]
+      ]
+      
+      ; Randomly place a house where there are no other objects and in the right neighborhood
+      move-to one-of patches with [(not any? turtles-here) and (not any? turtles-on neighbors) and (meaning = classX) and not any? police-stations in-radius 7]
+      ; Center house on patch (e.g. x = 9, not x = 9.4)
+      move-to patch-here
+    ]
+    
+    ; For spreading houses even in the neighborhoods
+    ifelse (it < 2)
+      [ set it it + 1 ]
+      [ set it 0 ]
+    
+    ; Lower counter for nbr of houses to create
+    set cnt cnt - 1
+  ]
+end

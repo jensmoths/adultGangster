@@ -1,0 +1,57 @@
+houses-own [
+  adults-living-here
+  adult-gangsters-living-here
+  children-living-here
+  child-gangsters-living-here
+  police-living-here
+  max-adults-living-here
+  max-adult-gangsters-living-here
+  max-children-living-here
+  max-child-gangsters-living-here
+  max-police-living-here
+  isFull?
+  class
+]
+
+
+to setup-houses
+  set-default-shape houses "house 1"
+  let cnt nbr-of-houses ;Copy value from slider to local variable so we can change value
+  let classList ["lowerclass" "middleclass" "upperclass"] ;List with neighborhoods to iterate through to spread houses evenly
+  let it random 2 ;it = item, to iterate classList
+  
+  ; Create nbr-of-houses (value from slider) houses
+  while [cnt > 0] [   
+    let classX item it classList
+    
+    create-houses 1 [
+      set color white
+      set size 2
+      set adults-living-here 0
+      set adult-gangsters-living-here 0
+      set children-living-here 0
+      set child-gangsters-living-here 0
+      set police-living-here 0
+      set max-adults-living-here 3
+      set max-adult-gangsters-living-here 1
+      set max-children-living-here 4
+      set max-child-gangsters-living-here 2
+      set max-police-living-here 1
+      set isFull? false
+      set class classX
+      
+      ; Randomly place a house where there are no other objects and in the right neighborhood with a little spread
+      move-to one-of patches with [(not any? turtles-here) and (not any? turtles-on neighbors) and (meaning = classX) and not any? houses in-radius 5]
+      ; Center house on patch (e.g. x = 9, not x = 9.4)
+      move-to patch-here
+    ]
+    
+    ; For spreading houses even in the neighborhoods
+    ifelse (it < 2)
+      [ set it it + 1 ]
+      [ set it 0 ]
+    
+    ; Lower counter for nbr of houses to create
+    set cnt cnt - 1
+  ]
+end
