@@ -92,6 +92,16 @@ to execute-intentions
  ;; if show-intentions [set label intentions] ;; Just for debugging. 
 end 
 
+;; Executes intention with highest priority
+to execute-intentionsP
+;;;locals [myInt]  ;; first intentions
+  if empty? intentions [stop]
+  let myInt get-intention
+  run intention-name myInt
+  if runresult intention-done myInt [remove-intention myInt]
+ ;; if show-intentions [set label intentions] ;; Just for debugging. 
+end 
+
 ;;;; Intentions Structure Access Functions
 ;; returns the current intention of the agent
 to-report current-intention
@@ -101,7 +111,14 @@ end
 ;; Reports the full intention structure 
 to-report get-intention
   report first intentions
+end
+
+;; Reports intention with highest priority
+to-report get-intentionP
+  let temp sort-by [ [i j] -> item 2 i < item 2 j] intentions
+  report first temp
 end 
+
 
 ;; Returns the intetnion name (the executable)
 to-report intention-name [intention]
@@ -134,6 +151,11 @@ end
 
 to add-intention [name done]
   set intentions fput (list name done) intentions
+end 
+
+;; 0 is the highest priority
+to add-intentionP [name done priority]
+  set intentions fput (list name done priority) intentions
 end 
  
 ;;;; SPECIAL ACTIONS 
