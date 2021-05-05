@@ -53,7 +53,15 @@ to processMsg
       performative = "agree"[
         (ifelse
           content = "availableForDelivery"[
-          add-belief create-belief "availableForDelivery" sender]
+            ifelse exist-beliefs-of-type "waitingForAvailibilty" 
+            [
+              add-belief create-belief "availableForDelivery" sender
+              let x get-belief "waitingForAvailibilty"
+            ]
+          [
+              send create-reply "decline" msg
+          ]
+          ]
           content = "212"[]
     )]
     performative = "request"[
@@ -93,6 +101,7 @@ to requestDelivery
   set msg add-content "availableToDeliver" msg
   send msg
   add-intention "orderDelivery" "deliveryOrdered" 
+  add-belief create-belief "waitingForAvailibilty" ""
 end
 
 to orderDelivery
@@ -106,6 +115,7 @@ to orderDelivery
     set string word string word "drop" word word "z" "4" word "q" "4"
     set msg add-content string msg
     send msg
+    
   ]
 end
 
