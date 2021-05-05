@@ -59,7 +59,9 @@ to processMsg
               let x get-belief "waitingForAvailibilty"
             ]
           [
-              send create-reply "decline" msg
+              let reply create-reply "decline" msg
+              set reply add-content "tooLate" reply
+              send reply
           ]
           ]
           content = "212"[]
@@ -84,7 +86,6 @@ to deliberateIntentions
     [
      let belief get-belief "wantsDrugs"
      let customer belief-content belief
-     show customer
      add-belief create-belief "deliveringDrugs" customer
      add-intention "requestDelivery" "true"
     ]
@@ -108,23 +109,24 @@ to orderDelivery
  if exist-beliefs-of-type "availableForDelivery" 
   [
     let msg create-message "inform"
-    let reciever read-first-belief-of-type "availableForDelivery"
+    let reciever belief-content read-first-belief-of-type "availableForDelivery"
     set msg add-receiver reciever  msg
     let string "stash"
     set string word string word word "x" "4" word "y" "4"
     set string word string word "drop" word word "z" "4" word "q" "4"
     set msg add-content string msg
+    show msg
     send msg
-    
+    remove-belief read-first-belief-of-type "availableForDelivery"
   ]
 end
 
 to-report deliveryOrdered
   if exist-beliefs-of-type "availableForDelivery" 
     [
-      report true
+      report false
     ]
-  report false
+  report true
 end
 
 to sendLocation
@@ -135,5 +137,6 @@ to sendLocation
     set string word string word "4" "4"
     set msg add-content string msg
     send msg
+    remove-belief read-first-belief-of-type "deliveredDrugs"
 end
 

@@ -80,6 +80,22 @@ to test
     send msg]
 
 end
+
+to test2
+ask childrens 1[ let msg create-message "agree"
+    set msg add-receiver 6 msg
+    set msg add-content "availableForDelivery" msg
+    send msg
+  ]
+end
+
+to test3
+ask childrens 0[ let msg create-message "inform"
+    set msg add-receiver 6 msg
+    set msg add-content "delivered" msg
+    send msg
+  ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -126,7 +142,7 @@ BUTTON
 145
 NIL
 go
-T
+NIL
 1
 T
 OBSERVER
