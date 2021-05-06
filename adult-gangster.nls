@@ -117,16 +117,18 @@ to orderDelivery
     set msg add-content string msg
     show msg
     send msg
-    remove-belief read-first-belief-of-type "availableForDelivery"
+   ;; remove-belief read-first-belief-of-type "availableForDelivery"
+    print 5
   ]
 end
 
 to-report deliveryOrdered
   if exist-beliefs-of-type "availableForDelivery" 
     [
-      report false
+      remove-belief read-first-belief-of-type "availableForDelivery"
+      report true
     ]
-  report true
+  report false
 end
 
 to sendLocation

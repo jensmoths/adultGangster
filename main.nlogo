@@ -82,7 +82,7 @@ to test
 end
 
 to test2
-ask childrens 1[ let msg create-message "agree"
+ask children [ let msg create-message "agree"
     set msg add-receiver 6 msg
     set msg add-content "availableForDelivery" msg
     send msg
@@ -142,7 +142,7 @@ BUTTON
 145
 NIL
 go
-NIL
+T
 1
 T
 OBSERVER
