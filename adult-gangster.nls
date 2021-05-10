@@ -50,32 +50,31 @@ to processMsg
     let content get-content msg
     let sender get-sender msg
     (ifelse 
-      performative = "agree"[
+      performative = "agree"
+      [
         (ifelse
-          content = "availableForDelivery"[
-            ifelse exist-beliefs-of-type "waitingForAvailibilty" 
-            [
-              add-belief create-belief "availableForDelivery" sender
-              let x get-belief "waitingForAvailibilty"
-            ]
+          content = "availableForDelivery"
           [
-              let reply create-reply "decline" msg
-              set reply add-content "tooLate" reply
-              send reply
-          ]
+            handleAvailableForDelivery msg
           ]
           content = "212"[]
     )]
-    performative = "request"[
+    performative = "request"
+      [
        (ifelse
-          content = "orderDrugs"[
-          add-belief create-belief "wantsDrugs" sender]
+          content = "orderDrugs"
+          [
+            add-belief create-belief "wantsDrugs" sender
+          ]
           content = "212"[]
     )]
-      performative = "inform"[
+      performative = "inform"
+      [
        (ifelse
-          content = "delivered"[
-          add-belief create-belief "deliveredDrugs" sender]
+          content = "delivered"
+          [
+            add-belief create-belief "deliveredDrugs" sender
+          ]
           content = "212"[]
     )]
   )]  
@@ -84,16 +83,15 @@ end
 to deliberateIntentions
     if exist-beliefs-of-type "wantsDrugs"
     [
-     let belief get-belief "wantsDrugs"
-     let customer belief-content belief
-     add-belief create-belief "deliveringDrugs" customer
-     add-intention "requestDelivery" "true"
+      let belief get-belief "wantsDrugs"
+      let customer belief-content belief
+      add-belief create-belief "deliveringDrugs" customer
+      add-intention "requestDelivery" "true"
     ]
-    if exist-beliefs-of-type "deliveredDrugs"
+      if exist-beliefs-of-type "deliveredDrugs"
     [
-    add-intention "sendLocation" "true"
-    ]
-    
+     add-intention "sendLocation" "true"
+    ]   
 end
 
 to requestDelivery
@@ -111,14 +109,8 @@ to orderDelivery
     let msg create-message "inform"
     let reciever belief-content read-first-belief-of-type "availableForDelivery"
     set msg add-receiver reciever  msg
-    let string "stash"
-    set string word string word word "x" "4" word "y" "4"
-    set string word string word "drop" word word "z" "4" word "q" "4"
-    set msg add-content string msg
-    show msg
+    set msg add-content ["locations-at" ["reference to stashhouse" "reference to deliveryspot"]] msg
     send msg
-   ;; remove-belief read-first-belief-of-type "availableForDelivery"
-    print 5
   ]
 end
 
@@ -133,12 +125,23 @@ end
 
 to sendLocation
   let msg create-message "inform"
-    let reciever belief-content get-belief "deliveringDrugs"
-    set msg add-receiver reciever msg
-    let string "locationDrugs"
-    set string word string word "4" "4"
-    set msg add-content string msg
-    send msg
-    remove-belief read-first-belief-of-type "deliveredDrugs"
+  let reciever belief-content get-belief "deliveringDrugs"
+  set msg add-receiver reciever msg
+  set msg add-content ["locationDrugs" "reference to deliveryspot"]  msg
+  send msg
+  remove-belief read-first-belief-of-type "deliveredDrugs"
+end
+
+to handleAvailableForDelivery [msg]
+  ifelse exist-beliefs-of-type "waitingForAvailibilty" 
+    [
+      add-belief create-belief "availableForDelivery" sender
+      let x get-belief "waitingForAvailibilty"
+    ]
+    [
+      let reply create-reply "decline" msg
+      set reply add-content "tooLate" reply
+      send reply
+    ]
 end
 
