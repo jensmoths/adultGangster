@@ -5,7 +5,7 @@ __includes [
 ;;  "child.nls"
 ;;  "adult.nls"
 ;;  "house.nls"
-;;  "gang-hideout.nls"
+ ;; "gang-hideout.nls"
 ;;  "stash-house.nls"
 ;;  "school.nls"
 ;;  "playground.nls"
@@ -16,6 +16,8 @@ __includes [
 breed [ adult-gangsters adult-gangster]
 breed [ children childrens ]
 breed [ adult adults ]
+breed [ stashes stash ]
+breed [ drops drop ]
 globals [
   time
 ]
@@ -24,6 +26,8 @@ turtles-own[
   beliefs
   intentions
   incoming-queue
+  processMsg
+  deliberateIntentions
 ]
 to setup
   clear-all
@@ -40,15 +44,15 @@ end
 to go
   ask turtles[
     ;humanBehaviour ;eg update time awake, hunger. Maybe implement later?
-    observeEnvironment ;what does the agents see and thereby belief. Question for later: What are agents vision range? neighbors? different range for different agents?
-    processMsg ;read and process messages and update beliefs
+    ;;observeEnvironment ;what does the agents see and thereby belief. Question for later: What are agents vision range? neighbors? different range for different agents?
+    run processMsg ;read and process messages and update beliefs
 
     if (not reactiveIntention)
     ;if no reactive intention has been added to stack
     [
       if (empty? intentions)
       [
-        deliberateIntentions ;decides what intention to achieve next and put it on stack
+        run deliberateIntentions ;decides what intention to achieve next and put it on stack
       ]
     ]
 

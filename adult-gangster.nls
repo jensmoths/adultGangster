@@ -1,10 +1,11 @@
-globals [stash]
+
 
 adult-gangsters-own [
   
 ]
 
 to setup-adult-gangsters
+  
   create-children 6[
   set beliefs ([])
     set intentions ([])
@@ -16,6 +17,8 @@ to setup-adult-gangsters
     setxy random-xcor random-ycor
   ]
 create-adult-gangsters 1[
+    set processMsg "processMsgAdultGangster"
+    set deliberateIntentions "deliberateIntentionsAdultGangster"
     set beliefs ([])
     set intentions ([])
     set incoming-queue ([])
@@ -40,10 +43,33 @@ create-adult 1[
     ;setxy 1 1
 
   ]
+  create-stashes 1[
+
+    set shape  "house"
+    set color yellow
+    set size 2  ; easier to see
+    set label-color yellow - 2
+
+    setxy random-xcor random-ycor
+    ;setxy 1 1
+
+  ]
+  create-drops 1[
+
+    set shape  "house"
+    set color blue
+    set size 2  ; easier to see
+    set label-color yellow - 2
+
+    setxy random-xcor random-ycor
+    ;setxy 1 1
+
+  ]
+  
 end
 
 
-to processMsg  
+to processMsgAdultGangster
   if not empty? incoming-queue [
     let msg get-message
     let performative get-performative msg
@@ -71,16 +97,16 @@ to processMsg
       performative = "inform"
       [
        (ifelse
-          content = "delivered"
+          item 0 content = "delivered"
           [
-            add-belief create-belief "deliveredDrugs" sender
+            add-belief create-belief "deliveredDrugs" item 1 content
           ]
           content = "212"[]
     )]
   )]  
 end
 
-to deliberateIntentions
+to deliberateIntentionsAdultGangster
     if exist-beliefs-of-type "wantsDrugs"
     [
       let belief get-belief "wantsDrugs"
@@ -109,7 +135,8 @@ to orderDelivery
     let msg create-message "inform"
     let reciever belief-content read-first-belief-of-type "availableForDelivery"
     set msg add-receiver reciever  msg
-    set msg add-content ["locations-at" ["reference to stashhouse" "reference to deliveryspot"]] msg
+    let content (list "stash" one-of stashes "drop" one-of drops)
+    set msg add-content list "locations-at" content msg
     send msg
   ]
 end
@@ -127,14 +154,16 @@ to sendLocation
   let msg create-message "inform"
   let reciever belief-content get-belief "deliveringDrugs"
   set msg add-receiver reciever msg
-  set msg add-content ["locationDrugs" "reference to deliveryspot"]  msg
+  let dropLocation belief-content get-belief "deliveredgDrugs"
+  set msg add-content (list "locationDrugs" dropLocation) msg
   send msg
-  remove-belief read-first-belief-of-type "deliveredDrugs"
+  ;;remove-belief read-first-belief-of-type "deliveredDrugs"
 end
 
 to handleAvailableForDelivery [msg]
   ifelse exist-beliefs-of-type "waitingForAvailibilty" 
     [
+      let sender get-sender msg
       add-belief create-belief "availableForDelivery" sender
       let x get-belief "waitingForAvailibilty"
     ]
