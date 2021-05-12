@@ -1,7 +1,7 @@
 
 
 adult-gangsters-own [
-  
+  money
 ]
 
 to setup-adult-gangsters
@@ -47,9 +47,10 @@ to processMsgAdultGangster
     performative = "request"
       [
        (ifelse
-          content = "orderDrugs"
+          first content = "orderDrugs"
           [
             add-belief create-belief "wantsDrugs" sender
+            set money money + item 1 content
           ]
           content = "212"[]
     )]
@@ -66,17 +67,30 @@ to processMsgAdultGangster
 end
 
 to deliberateIntentionsAdultGangster
-    if exist-beliefs-of-type "wantsDrugs"
-    [
-      let belief get-belief "wantsDrugs" 
-      let customer belief-content belief
-      add-belief create-belief "deliveringDrugs" customer
-      add-intention "requestDelivery" "true"
-    ]
-      if exist-beliefs-of-type "deliveredDrugs"
-    [
-     add-intention "sendLocation" "true"
-    ]   
+  if exist-beliefs-of-type "wantsDrugs"
+  [
+    let belief get-belief "wantsDrugs" 
+    let customer belief-content belief
+    add-belief create-belief "deliveringDrugs" customer
+    add-intention "requestDelivery" "true"
+  ]
+  if exist-beliefs-of-type "deliveredDrugs"
+  [
+    add-intention "sendLocation" "true"
+  ]
+  if exist-beliefs-of-type "inPrison"
+  [
+    add-intention "prisonState" "imprisoned"
+  ]
+  
+end
+
+to prisonState
+  
+end
+
+to-report imprisoned
+  report true
 end
 
 to requestDelivery
@@ -110,13 +124,14 @@ to-report deliveryOrdered
 end
 
 to sendLocation
-;  let msg create-message "inform"
-;  let reciever belief-content get-belief "deliveringDrugs" 
-;  set msg add-receiver reciever msg
-;  let dropLocation belief-content get-belief "deliveredgDrugs" 
-;  set msg add-content (list "locationDrugs" dropLocation) msg
-;  send msg
-  remove-belief read-first-belief-of-type "deliveredDrugs"
+  let msg create-message "inform"
+  let reciever belief-content get-belief "deliveringDrugs" 
+  set msg add-receiver reciever msg
+  let dropLocation belief-content get-belief "deliveredDrugs" 
+  set msg add-content (list "locationDrugs" dropLocation) msg
+  send msg
+  set status status + 1
+  ;;remove-belief read-first-belief-of-type "deliveredDrugs"
 end
 
 to handleAvailableForDelivery [msg]
