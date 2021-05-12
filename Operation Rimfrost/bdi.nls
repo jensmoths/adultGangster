@@ -61,9 +61,9 @@ to-report beliefs-of-type [b-type]
 end
 
 ;;; Returns the agent's belief of a certain type and removes it
-to-report get-belief [b-type agent]
+to-report get-belief [b-type]
   ifelse exist-beliefs-of-type b-type 
-  [let bel first filter [first beliefs = b-type and item 1 beliefs = agent] beliefs
+  [let bel first filter [i -> first i = b-type] beliefs
    remove-belief bel
    report bel
   ]

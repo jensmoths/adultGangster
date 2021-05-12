@@ -1,3 +1,316 @@
+child-gangsters-own[recivedmsg typemsg beliefMsg bedtime myschooldestx myschooldesty maxStatus]
+;Uppdatera status
 to setup-child-gangsters
-  ;test
+  
+  let counter nbr-of-child-gangsters
+  create-child-gangsters counter[
+    
+   set observeEnvironment "observeEnvironmentChildGangster"
+   set processMsg "processMsgChildGangster"
+   set reactiveIntention "reactiveIntentionChildGangster"
+   set deliberateIntentions "deliberateIntentionsChildGangster"
+  
+    
+   setxy random-xcor random-ycor
+   set size 6
+   set beliefs ([])
+   set intentions ([])
+   set incoming-queue([])
+  setup-child-gangsters-belief
+   set maxStatus 100
+   set status 1 + random 15
+    
+  let rand random 3  
+
+  ifelse rand < 1[ 
+   
+    add-belief create-belief "territory" "lowerclass"
+    add-belief create-belief "home" one-of houses with [child-gangsters-living-here < max-child-gangsters-living-here and class = "lowerclass"]
+    add-belief create-belief "myschool" one-of schools with [class = "lowerclass"] ; argumentera för att det inte behövs max antal i skolan
+      
+      ;gäng
+  ]
+  [
+  ifelse rand < 2[
+  
+        add-belief create-belief "territory" "middleclass"
+        add-belief create-belief "home" one-of houses with [child-gangsters-living-here < max-child-gangsters-living-here and class = "middleclass"]
+        add-belief create-belief "myschool" one-of schools with [class = "middleclass"]
+        
+  ]
+  
+  [
+    
+        add-belief create-belief "territory" "upperclass"
+        add-belief create-belief "home" one-of houses with [child-gangsters-living-here < max-child-gangsters-living-here and class = "upperclass"]
+        add-belief create-belief "myschool" one-of schools with [class = "upperclass"]
+        
+    ]
+    ]
+  
+
+  move-to belief-content read-first-belief-of-type "home"
+   ask belief-content read-first-belief-of-type "home" [
+     set child-gangsters-living-here child-gangsters-living-here + 1
+    ]
+    
+  set myschooldestx [xcor] of belief-content read-first-belief-of-type "myschool"
+  set myschooldesty [ycor] of belief-content read-first-belief-of-type "myschool"
+ 
+       
+  ]
+
 end
+
+to setup-child-gangsters-belief
+  
+   add-belief create-belief "school" ""
+   add-belief create-belief "request" ""
+   add-belief create-belief "inform" ""
+   add-belief create-belief "schoolSkipped" "" 
+  
+end
+
+to-report reactiveIntentionChildGangster
+  ifelse belief-content read-first-belief-of-type "police-near"[
+    report true
+   ]
+  [ report false ]
+end
+
+to observeEnvironmentChildGangster
+  ;; bedtime?
+  ;; gå til skolan?  
+  if time > 20 and time < 1500 
+  [    
+    update-belief create-belief "school" "Time to go"
+   
+     
+  ]
+  if time > 1500
+  [update-belief create-belief "school" ""
+    update-belief create-belief "schoolSkipped" ""
+  ]
+ 
+  
+end
+
+to deliberateIntentionsChildGangster
+   if belief-content read-first-belief-of-type "request" != ""
+[
+    add-intention "respond" "true"
+
+]
+  if belief-content read-first-belief-of-type "school" != ""
+[
+     let rand random 200 
+    ifelse rand > status and belief-content read-first-belief-of-type "schoolSkipped" != "true"
+    [
+    add-intention "gotoschool" "atschool"
+    ]
+    [
+      update-belief create-belief "schoolSkipped" "true"
+    ]
+    
+  ]
+  
+end
+
+to reconsider
+  if random 15 > status  ;; and belief-content read-first-belief-of-type "request" != ""
+  [
+    remove-intention get-intention
+    update-belief create-belief "schoolSkipped" "true" ;; test
+    add-intention "gohome" "athome"  ;; test
+    
+  ]
+end
+
+to gotoschool
+  face belief-content read-first-belief-of-type "myschool"
+  fd 1
+  reconsider
+  
+end
+
+to-report atschool
+  if distance belief-content read-first-belief-of-type "myschool" < 2
+  [ 
+    add-intention "inschool" "finishedschool"
+   report true
+  ]
+  report false  
+end
+
+to inschool
+  reconsider
+end
+
+to-report finishedschool
+  if belief-content read-first-belief-of-type "school" = "" [
+  add-intention "gohome" "athome"
+    change-status
+    report true]
+  
+  report false  
+end
+
+to gohome
+   face belief-content read-first-belief-of-type "home"
+  fd 1  
+end
+
+to-report athome
+  if distance belief-content read-first-belief-of-type "home" < 2
+  [     
+    
+   report true
+  ]
+  report false  
+  
+end
+
+
+
+to processMsgChildGangster
+  while [not empty? incoming-queue]
+  [
+    set recivedmsg get-message
+    set typemsg get-performative recivedmsg
+    ifelse member? "content:" recivedmsg    [   
+      let content get-content recivedmsg
+        
+    if typemsg = "request"
+    [
+         if content = "availableToDeliver" [       
+          print 666
+        update-belief create-belief "request" recivedmsg
+    ]
+    ]
+      
+    if typemsg = "inform"
+    [
+      
+       if first content = "stash"[
+       add-belief create-belief "deliveryAccepted" recivedmsg
+      
+         ;;;meddelandet vi får: "stash" turtle 1 “drop” turtle 2
+    ]
+    ]
+      if typemsg = "decline"[
+      if first content = "tooLate"  [      
+          add-belief create-belief "deliveryDeclined" ""
+
+      ]
+      ]
+    ]
+    [
+    if typemsg = "agree"
+    [
+       print "got agree"]
+    ]
+    
+  ]
+end
+
+
+to respond
+
+  set beliefMsg belief-content read-first-belief-of-type "request"
+  
+  let notifMsg create-reply "agree" beliefMsg
+  send add-content ("availableForDelivery") notifMsg
+    
+  update-belief create-belief "request" ""
+  add-intention "await-reply" "reply-received"
+  
+end
+
+to await-reply
+
+  ; Här behöver det inte hända något. stå still?
+
+end
+
+to-report reply-received
+  ;; Check if message received. "inform" "stashCord dropCord" // "inform" "decline"
+  ifelse exist-beliefs-of-type "deliveryDeclined"
+  [
+    remove-belief read-first-belief-of-type "deliveryDeclined"
+    report true ]
+
+  [ if exist-beliefs-of-type "deliveryAccepted"
+    [ add-intention "fetch-drugs" "drugs-fetched"
+      report true]
+     ]
+  report false
+
+end
+
+to fetch-drugs
+
+  set beliefMsg  belief-content read-first-belief-of-type "deliveryAccepted"
+
+  let msgContent get-content beliefMsg
+
+  ;; msgContent = ("stash") turtle 1 (“delivery”) turtle 2)
+    
+  face item 1 msgContent 
+   fd 1
+
+end
+
+to-report drugs-fetched
+
+  let msgContent get-content beliefMsg
+
+   if distance item 1 msgContent  < 2 [
+
+    add-belief create-belief "carrying drugs" ""
+    add-intention "deliver-drugs" "drugs-delivered"
+
+    report true]
+
+  report false
+
+end
+
+to deliver-drugs
+
+  let msgContent get-content beliefMsg
+
+  face item 3 msgContent 
+  fd 1
+
+end
+
+to-report drugs-delivered
+
+  let msgContent get-content beliefMsg
+    
+ if distance item 3 msgContent  < 2 [ 
+
+    remove-belief read-first-belief-of-type "carrying drugs"
+    add-intention "notify-dealer" "true"
+    change-status
+    report true]
+
+  report false
+end
+
+to notify-dealer
+  
+  let msgContent get-content beliefMsg
+  let notifMsg create-reply "inform" beliefMsg
+ send add-content (list ("delivered") (item 3 msgContent)) notifMsg
+  
+end
+
+to change-status
+ 
+ let statusChange status / maxStatus  
+ set statusChange ( 1 - statusChange ) / 1 
+ set status status + statusChange
+  
+end
+

@@ -1,80 +1,135 @@
 
 
-to setup-adult-gangsters
+adult-gangsters-own [
   
-  let Q nbr-of-adult-gangsters
-  create-adult-gangsters Q[
-    ;;Starting possition
+]
+
+to setup-adult-gangsters
+
+create-adult-gangsters nbr-of-adult-gangsters[
+    set processMsg "processMsgAdultGangster"
+    set deliberateIntentions "deliberateIntentionsAdultGangster"
+    set observeEnvironment "observeEnvironmentAdultGangster"
+    set beliefs ([])
+    set intentions ([])
+    set incoming-queue ([])
+    set shape  "person"
+    set color red
+    set size 2  ; easier to see
+    set label-color red - 2
+
     setxy random-xcor random-ycor
-    set beliefs[]
-    set intentions[]
-    set size 5
-    set shape "mario gangster"
-    ;;Setting a gang
-    ifelse random 100 < 49 
-    [add-belief create-belief "gang" 15]
-    [add-belief create-belief "gang" 45] 
-    set color belief-content  read-first-belief-of-type "gang"
-    add-belief create-belief "gangMembers" []
-    add-belief create-belief "othergangHideouts" []
-    add-belief create-belief "othergangMembers" []
-    
-    let R random 100
-    ifelse R < 33 [
-      
-      add-belief create-belief "territory" "lowerclass"
-      add-belief create-belief "home" one-of houses with [adult-gangsters-living-here = 0 and class = "lowerclass"]
-      ;;add-belief create-belief "status" 50
-      ;;add-belief create-belief "money"
+    ;setxy 1 1]
+  ]
+
+  
+end
+
+to observeEnvironmentAdultGangster
+end
+
+to processMsgAdultGangster
+  if not empty? incoming-queue [
+    let msg get-message
+    let performative get-performative msg
+    let content get-content msg
+    let sender get-sender msg
+    (ifelse 
+      performative = "agree"
+      [
+        (ifelse
+          content = "availableForDelivery"
+          [
+            handleAvailableForDelivery msg
+          ]
+          content = "212"[]
+    )]
+    performative = "request"
+      [
+       (ifelse
+          content = "orderDrugs"
+          [
+            add-belief create-belief "wantsDrugs" sender
+          ]
+          content = "212"[]
+    )]
+      performative = "inform"
+      [
+       (ifelse
+          item 0 content = "delivered"
+          [
+            add-belief create-belief "deliveredDrugs" item 1 content
+          ]
+          content = "212"[]
+    )]
+  )]  
+end
+
+to deliberateIntentionsAdultGangster
+    if exist-beliefs-of-type "wantsDrugs"
+    [
+      let belief get-belief "wantsDrugs" 
+      let customer belief-content belief
+      add-belief create-belief "deliveringDrugs" customer
+      add-intention "requestDelivery" "true"
+    ]
+      if exist-beliefs-of-type "deliveredDrugs"
+    [
+     add-intention "sendLocation" "true"
+    ]   
+end
+
+to requestDelivery
+  let msg create-message "request"
+  ;;set msg add-multiple-receivers child-gangsters  msg
+  set msg add-content "availableToDeliver" msg
+  broadcast-to child-gangsters msg self
+  add-intention "orderDelivery" "deliveryOrdered" 
+  add-belief create-belief "waitingForAvailibilty" ""
+end
+
+to orderDelivery
+ if exist-beliefs-of-type "availableForDelivery" 
+  [
+    let msg create-message "inform"
+    let reciever belief-content read-first-belief-of-type "availableForDelivery"
+    set msg add-receiver reciever  msg
+    let content (list "stash" one-of stash-houses "drop" one-of drug-delivery-spots)
+    set msg add-content content msg
+    send msg
+  ]
+end
+
+to-report deliveryOrdered
+  if exist-beliefs-of-type "availableForDelivery" 
+    [
+      remove-belief read-first-belief-of-type "availableForDelivery"
+      report true
+    ]
+  report false
+end
+
+to sendLocation
+;  let msg create-message "inform"
+;  let reciever belief-content get-belief "deliveringDrugs" 
+;  set msg add-receiver reciever msg
+;  let dropLocation belief-content get-belief "deliveredgDrugs" 
+;  set msg add-content (list "locationDrugs" dropLocation) msg
+;  send msg
+  remove-belief read-first-belief-of-type "deliveredDrugs"
+end
+
+to handleAvailableForDelivery [msg]
+  ifelse exist-beliefs-of-type "waitingForAvailibilty" 
+    [
+      let sender get-sender msg
+      add-belief create-belief "availableForDelivery" sender
+      let x get-belief "waitingForAvailibilty" 
     ]
     [
-      ifelse R < 67[
-        
-        
-        add-belief create-belief "territory" "middleclass"
-        add-belief create-belief "home" one-of houses with [adult-gangsters-living-here = 0 and class = "middleclass"]
-        ;;add-belief create-belief "status";;ADD STATUS FRÅGA FREDRIK OM GRÄNSERNA
-        ;;add-belief create-belief "money";;ADD StartPengar FRÅGA FREDRIK OM GRÄNSERNA
-      ][
-        
-        add-belief create-belief "territory" "lowerclass"
-        add-belief create-belief "home" one-of houses with [adult-gangsters-living-here = 0 and class = "upperclass"]
-        ;;add-belief create-belief "status";;ADD STATUS FRÅGA FREDRIK OM GRÄNSERNA
-        ;;add-belief create-belief "money";;ADD StartPengar FRÅGA FREDRIK OM GRÄNSERNA
-      ] 
-   ]
-   move-to belief-content read-first-belief-of-type "home"
-   ask belief-content read-first-belief-of-type "home" [
-     set adult-gangsters-living-here 1
-    ] 
-    ;;let temp gang-hideouts with [color = belief-content read-first-belief-of-type "gang"]
-    ;;foreach temp [
-      ;;x -> add-belief create-belief "gangHideout" x 
-    ;;]
-    
-    
-    ;;add-belief create-belief "gangHideouts" [self] of gang-hideouts with [color = belief-content read-first-belief-of-type "gang"] 
-    ;;ADD MEMBER TO LIST
-  ]
- 
-  ;;update-ganghideoutlist
-  ;;update-gangmemberlist
+      let reply create-reply "decline" msg
+      set reply add-content "tooLate" reply
+      send reply
+    ]
 end
 
-to update-gangmemberlist
-  ask adult-gangsters[
-    update-belief create-belief "gangMembers" adult-gangsters with [color = belief-content read-first-belief-of-type "gang"];; updatera allas gangMembers
-  ]
-end
-
-to update-ganghideoutlist
-  
-end
-
-to add-othergangmember-to-list
-  ;;Test
-end
-
-to add-otherganghideout-to-list
-  ;;Test
-end

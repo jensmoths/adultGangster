@@ -2,22 +2,22 @@ to setup-police
   ;test
 end
 
-to observeEnvironment
-
-end
-
-to processMsg
-
-end
-
-to-report reactiveIntention
-  report false
-end
-
-to deliberateIntentions
-
-end
-
-to executeIntentions
-
-end
+;to observeEnvironment
+;
+;end
+;
+;to processMsg
+;
+;end
+;
+;to-report reactiveIntention
+;  report false
+;end
+;
+;to deliberateIntentions
+;
+;end
+;
+;to executeIntentions
+;
+;end

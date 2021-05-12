@@ -1,3 +1,35 @@
 to setup-children
-  ;test
+create-children 1[
+    set beliefs ([])
+    set intentions ([])
+    set incoming-queue ([])
+    set shape  "person"
+    set color red
+    set size 2  ; easier to see
+    set label-color red - 2
+
+    setxy random-xcor random-ycor
+    
+    set observeEnvironment "observeEnvironment-child"
+    
+    set processMsg "processMsg-child"
+    set reactiveIntention "reactiveIntention-child"
+    set deliberateIntentions "deliberateIntentions-child"
+  ]
+end
+
+to observeEnvironment-child
+  
+end
+
+to processMsg-child
+  
+end
+
+to reactiveIntention-child
+  
+end
+
+to deliberateIntentions-child
+  
 end
