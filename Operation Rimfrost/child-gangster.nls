@@ -1,4 +1,4 @@
-child-gangsters-own[recivedmsg typemsg beliefMsg bedtime myschooldestx myschooldesty maxStatus]
+child-gangsters-own[recivedmsg typemsg beliefMsg bedtime myschooldestx myschooldesty maxxstatus]
 ;Uppdatera status
 to setup-child-gangsters
   
@@ -17,7 +17,7 @@ to setup-child-gangsters
    set intentions ([])
    set incoming-queue([])
   setup-child-gangsters-belief
-   set maxStatus 100
+   set maxxstatus 100
    set status 1 + random 15
     
   let rand random 3  
@@ -308,7 +308,7 @@ end
 
 to change-status
  
- let statusChange status / maxStatus  
+ let statusChange status / maxxstatus  
  set statusChange ( 1 - statusChange ) / 1 
  set status status + statusChange
   
