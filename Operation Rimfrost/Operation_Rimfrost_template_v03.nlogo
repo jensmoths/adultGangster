@@ -387,7 +387,7 @@ nbr-of-adult-gangsters
 nbr-of-adult-gangsters
 0
 100
-1.0
+5.0
 1
 1
 NIL
@@ -546,7 +546,7 @@ SWITCH
 669
 show-building-labels
 show-building-labels
-0
+1
 1
 -1000
 
