@@ -1,6 +1,8 @@
 prisons-own [
   nbr-of-adults-here
   nbr-of-adult-gangsters-here
+  allImprisonedAdults
+  allImprisonedAdultGangsters
 ]
 
 

@@ -181,6 +181,42 @@ to test
 
 end
 
+to-report calculate-min-breed-status [breedType]
+  let minStatus 1000000000
+  ask breedType [
+    if status < minStatus [
+      set minStatus status ;status is a turtle-own variable with integer
+    ]
+  ]
+  report minStatus
+end
+
+to-report calculate-max-breed-status [breedType]
+  let maxStatus 0
+  ask breedType [
+    if status > maxStatus [
+      set maxStatus status ;status is a turtle-own variable with integer
+    ]
+  ]
+  report maxStatus
+end
+
+to-report calculate-avg-breed-status [breedType]
+  let statusAvg 0
+  ask breedType [
+    set statusAvg statusAvg + status ;status is a turtle-own variable with integer
+  ]
+  report statusAvg / count breedType
+end
+
+to-report calculate-sum-breed-status [breedType]
+  let statusSum 0
+  ask breedType [
+    set statusSum statusSum + status ;status is a turtle-own variable with integer
+  ]
+  report statusSum
+end
+
 ;************** end function and report part **************
 
 ; ************** VIDEO RECORDING FUNCTIONS **************

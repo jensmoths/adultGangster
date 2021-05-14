@@ -94,7 +94,15 @@ to processMsgAdultGangster
           [
             add-belief create-belief "deliveredDrugs" item 1 content
           ]
-          content = "212"[]
+          content = "arrested"
+          [
+            add-belief create-belief "inPrison" "sentence"
+            add-belief create-belief "askedAdults" []  
+          ]
+          content = "joinedGang"
+          [
+          set status status + 1
+          ]
     )]
   )]  
 end
@@ -118,8 +126,23 @@ to deliberateIntentionsAdultGangster
   
 end
 
+
+
 to prisonState
-  
+  let msg create-message "request"
+  let copyofprisoners allImprisonedAdults
+  let asked belief-content read-first-belief-of-type "askedAdults"
+  foreach asked  [ i -> set copyofprisoners remove i copyofprisoners] 
+  if not empty? copyofprisoners
+  [
+    set msg add-receiver first copyofprisoners msg
+    let nstatus status / calculate-avg-breed-status adult-gangsters
+    let roll random-float nstatus
+    set msg add-content (list "wannabeGangster" roll)  msg
+    send msg
+    set asked fput first copyofprisoners asked
+    update-belief create-belief "askedAdults" asked
+  ] 
 end
 
 to-report imprisoned
@@ -180,6 +203,43 @@ to handleAvailableForDelivery [msg]
       send reply
     ]
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 to update-gangmemberlist
   ask adult-gangsters[
     let gang belief-content read-first-belief-of-type "gang"
