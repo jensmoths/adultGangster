@@ -172,13 +172,29 @@ to show-labels
     [ set label "" ]
 end
 
-to test
-  ask adults[
+to prisonState
+  print 5
   let msg create-message "request"
-  set msg add-receiver 225 msg
-  set msg add-content "orderDrugs" msg
-    send msg]
+  let copyofprisoners []
+  foreach adults [ i -> ask i[ if imprisoned [ set copyofprisoners lput i]]]
+  show copyofprisoners
+  print 5
 
+
+
+
+;  let asked belief-content read-first-belief-of-type "askedAdults"
+;  foreach asked  [ i -> set copyofprisoners remove i copyofprisoners]
+;  if not empty? copyofprisoners
+;  [
+;    set msg add-receiver first copyofprisoners msg
+;    let nstatus status / calculate-avg-breed-status adult-gangsters
+;    let roll random-float nstatus
+;    set msg add-content (list "wannabeGangster" roll)  msg
+;    send msg
+;    set asked fput first copyofprisoners asked
+;    update-belief create-belief "askedAdults" asked
+;  ]
 end
 
 to-report calculate-min-breed-status [breedType]
@@ -393,7 +409,7 @@ nbr-of-adults
 nbr-of-adults
 0
 140
-1.0
+7.0
 1
 1
 NIL
@@ -423,7 +439,7 @@ nbr-of-adult-gangsters
 nbr-of-adult-gangsters
 0
 100
-5.0
+1.0
 1
 1
 NIL
