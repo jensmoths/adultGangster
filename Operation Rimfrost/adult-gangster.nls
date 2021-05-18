@@ -1,6 +1,7 @@
 
 
 adult-gangsters-own [
+  
   money
 ]
 
@@ -15,6 +16,7 @@ create-adult-gangsters nbr-of-adult-gangsters[
     set incoming-queue ([])
     set size 3
     set shape "mario gangster"
+    set status 1
     
     ;;Setting a gang
     ifelse random 100 < 49 
@@ -83,7 +85,7 @@ to processMsgAdultGangster
           first content = "orderDrugs"
           [
             add-belief create-belief "wantsDrugs" sender
-            set money money + item 1 content
+            set money money + 30
           ]
           content = "212"[]
     )]
@@ -122,35 +124,29 @@ to deliberateIntentionsAdultGangster
   if exist-beliefs-of-type "inPrison"
   [
     add-intention "prisonState" "imprisoned"
-  ]
-  
+  ]  
 end
 
 
 
-to prisonSta
-  print 5
+to prisonState
   let msg create-message "request"
   let copyofprisoners []
-  foreach adults [ i -> ask i[ if imprisoned [ set copyofprisoners lput i]]]
-  show copyofprisoners
-  print 5
-    
-  
-  
-  
-;  let asked belief-content read-first-belief-of-type "askedAdults"
-;  foreach asked  [ i -> set copyofprisoners remove i copyofprisoners] 
-;  if not empty? copyofprisoners
-;  [
-;    set msg add-receiver first copyofprisoners msg
-;    let nstatus status / calculate-avg-breed-status adult-gangsters
-;    let roll random-float nstatus
-;    set msg add-content (list "wannabeGangster" roll)  msg
-;    send msg
-;    set asked fput first copyofprisoners asked
-;    update-belief create-belief "askedAdults" asked
-;  ] 
+  ask adults [if imprisonedAdult [ set copyofprisoners fput who copyofprisoners]]
+
+  add-belief create-belief "askedAdults" [] 
+  let asked belief-content read-first-belief-of-type "askedAdults"
+  foreach asked  [ i -> set copyofprisoners remove i copyofprisoners]
+  if not empty? copyofprisoners
+  [
+    set msg add-receiver first copyofprisoners msg
+    let nstatus status / calculate-avg-breed-status adult-gangsters
+    let roll random-float nstatus
+    set msg add-content (list "wannabeGangster" roll)  msg
+    send msg
+    set asked fput first copyofprisoners asked
+    update-belief create-belief "askedAdults" asked
+  ]
 end
 
 to-report imprisoned
