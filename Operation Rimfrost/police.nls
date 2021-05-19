@@ -1,23 +1,168 @@
+ police-own [beliefs intentions incoming-queue reactiveIntention
+  observeEnvironment
+  processMsg
+  deliberateIntentions
+]
+
 to setup-police
+  create-police nbr-of-police [
+  set intentions ([])
+  set beliefs ([])
+  set incoming-queue ([])
+ 
+  set shape "person"
+  set color blue
+  set size 2
+  setxy random-xcor random-ycor
+  
+  
+  set processMsg "processMsg-police"
+  set deliberateIntentions "deliberateIntentions-police"
+ 
+]
   ;test
 end
 
-;to observeEnvironment
-;
-;end
-;
-;to processMsg
-;
-;end
-;
-;to-report reactiveIntention
-;  report false
-;end
-;
-;to deliberateIntentions
-;
-;end
-;
-;to executeIntentions
-;
-;end
+to deliberateIntentions-police
+;  add-belief create-belief "visitation" false
+  add-intention "workday-plan" "workday-plan-done"
+
+  
+end
+
+to patrol 
+  rt random 90
+  lt random 90
+  fd 1  
+  if any? adults in-radius 1 
+  [
+    let id [who] of adults in-radius 1
+    let adult1 turtle first id
+    if [imprisonedAdult] of adult1 = false and [stopped] of adult1 = false
+    [
+    
+      let msg create-message "inform" 
+      set msg add-receiver first id msg
+      set msg add-content (list ("stop-police") 0) msg
+      send msg
+      add-belief create-belief "visitation" true ]
+
+
+  ]
+end
+
+to-report stop-patrolling 
+ ifelse exist-beliefs-of-type "visitation"
+ [
+    remove-belief read-first-belief-of-type "patrolling"
+    report true ]
+ [ 
+    report false ]
+end
+
+to workday-plan
+
+    ifelse exist-beliefs-of-type "visitation"
+    [
+      if exist-beliefs-of-type "arrest-person"[
+        let bel read-first-belief-of-type "arrest-person"
+        let content belief-content bel
+        if content = true [
+          add-intention "arrest" "stop-arrest"
+          add-belief create-belief "destination" one-of prisons
+        ] ; om arrest person är sant, läggs intentionen arrest till.
+          ; men oavsett om det är sant eller inte, kommer beliefen visitation och arrest-person
+          ; att tas bort. Alltså kommer patrol
+        remove-belief bel
+        remove-belief read-first-belief-of-type "visitation"
+      ]
+ ;   
+      
+    ]
+    [
+     if not exist-beliefs-of-type "patrolling" [
+      add-intention "patrol" "stop-patrolling"
+      add-belief create-belief "patrolling" true
+    ]
+  ]
+    
+    
+  
+end
+
+to-report workday-plan-done
+  report false
+end
+
+
+to arrest
+
+  ; gå till fängelset dvs one-of prisons. använd till exempel funktion walk-to-turtle i adult-filen.
+  ;
+  walk-to-turtle belief-content read-first-belief-of-type "destination"
+
+   
+  
+end
+
+to-report stop-arrest
+  ;om framme vid fängelset: 
+     ;remove-belief read-first-belief-of-type "arrest-person"
+     ;remove-belief destination
+     ;skicka meddelande till adult att vi är framme vid fängelset
+     ;remove-belief read-first-belief-of-type "person-to-arrest"
+     ;report true
+ 
+  let bel read-first-belief-of-type "destination"
+  let id belief-content bel
+  let location [plocation] of id
+  ifelse patch-here = location [
+    let msg create-message "inform" 
+    set msg add-receiver belief-content read-first-belief-of-type "person-to-arrest" msg
+    set msg add-content (list "at-prison" 0 ) msg
+    send msg
+
+    remove-belief bel ; destination
+
+    report true    
+  ][ report false]
+  report false
+end
+
+to processMsg-police
+  let temp-bool true 
+  while [ temp-bool = true ]
+ [  
+    let msg get-message
+    if msg = "no_message" [set temp-bool false stop]  
+    show msg
+    let perf get-performative msg
+    if member? "content:" msg
+    [
+      let content get-content msg
+      if perf = "inform" 
+      [
+        if first content = "drug-possession"
+        [
+          let replyMessage create-reply "inform" msg   
+          ifelse item 1 content = true
+          [      
+            set replyMessage add-content  (list ("you are under arrest") 0 ) replyMessage
+            add-belief create-belief "arrest-person" true
+            add-belief create-belief "person-to-arrest" get-sender msg
+            show belief-content read-first-belief-of-type "person-to-arrest"
+            
+          ]
+          [
+            set replyMessage add-content (list("you are free to go") 0) replyMessage
+            add-belief create-belief "arrest-person" false
+          ]
+          send replyMessage
+          
+        ]
+       ]
+     ]
+ ]
+
+end
+

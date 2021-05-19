@@ -3,6 +3,7 @@ workplaces-own [
   max-employees
   salary
   class
+  plocation
 ]
 
 
@@ -21,6 +22,7 @@ to setup-workplaces
       set adults-at-work 0
       set max-employees random 10 + 10
       set class classX
+     
       
       ; Set salary depending on neighborhood
       ifelse class = item 0 classList 

@@ -11,6 +11,7 @@ houses-own [
   max-police-living-here
   isFull?
   class
+  plocation
 ]
 
 
@@ -44,6 +45,7 @@ to setup-houses
       move-to one-of patches with [(not any? turtles-here) and (not any? turtles-on neighbors) and (meaning = classX) and not any? houses in-radius 5]
       ; Center house on patch (e.g. x = 9, not x = 9.4)
       move-to patch-here
+      set plocation patch-here
     ]
     
     ; For spreading houses even in the neighborhoods

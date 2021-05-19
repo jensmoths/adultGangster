@@ -1,30 +1,601 @@
-to setup-adults
- create-adults 1[
-    set beliefs ([])
-    set intentions ([])
-    set incoming-queue ([])
-    set shape  "person"
-    set color yellow
-    set size 2  ; easier to see
-    set label-color red - 2
+globals [nbr-of-lowerclass nbr-of-middleclass nbr-of-upperclass ]
 
-    setxy random-xcor random-ycor
+adults-own [ beliefs intentions incoming-queue status income money home-address work-address adult-class drug-use
+humanBehaviour
+imprisonedAdult
+stopped
+unarrestable
+mystatus
+
+]
+
+to setup-adults
+  ;; skapa en femtedel lowerclass, en femtedel upperclass, resten middleclass
+  
+  ;set nbr-of-lowerclass nbr-of-adults / 5
+  ;set nbr-of-upperclass nbr-of-adults / 5
+  ;set nbr-of-middleclass nbr-of-adults - ( nbr-of-upperclass + nbr-of-lowerclass )
+  set nbr-of-lowerclass 0
+  set nbr-of-upperclass 0
+  set nbr-of-middleclass 0
+  
+  create-adults nbr-of-adults [
+  set intentions ([])
+  set beliefs ([])
+  set incoming-queue ([])
+ 
+  set shape "person"
+  set color orange
+  set size 2
     
-    set observeEnvironment "observeEnvironment-adult"
+  set humanBehaviour "humanBehaviour-adults"
+  set observeEnvironment "observeEnvironment-adults"
+  set processMsg "check-messages"
+  set reactiveIntention "reactiveIntention-adult"
+  set deliberateIntentions "deliberate" 
+  
+  set imprisonedAdult false
+  set stopped false
     
-    set processMsg "processMsg-adult"
-    set reactiveIntention "reactiveIntention-adult"
-    set deliberateIntentions "deliberateIntentions-adult"
-  ]
+    
+  setup-drug-use 
+  setup-adults-class 
+  setup-home-work
+]
+  
+ 
 end
 
-to observeEnvironment-adult
+to setup-adults-class
+
+    ifelse nbr-of-lowerclass < nbr-of-adults / 5 [
+    set adult-class "lowerclass"
+    set nbr-of-lowerclass nbr-of-lowerclass + 1  ]
+  [
+    ifelse nbr-of-upperclass < nbr-of-adults / 5 [
+      set adult-class "upperclass"
+      set nbr-of-upperclass nbr-of-upperclass + 1 ]
+    [
+      set adult-class "middleclass" ]
+  ]
   
 end
 
-to processMsg-adult 
+
+to setup-drug-use
+   set drug-use random 100
+   add-belief create-belief "drug-use" drug-use
+   if drug-use > 70 [
+   add-belief create-belief "drug-cravings" random 100
+   add-belief create-belief "has-drugs" false
+   add-belief create-belief "drug-amount" 0 ]
+    
+  
 end
-to reactiveIntention-adult
+
+to setup-home-work  
+ 
+ 
+  let temp-house one-of houses 
+  let temp-work one-of workplaces
+  
+  ifelse adult-class = "lowerclass" 
+[
+  
+    set temp-house one-of houses with [adults-living-here < max-adults-living-here and class = "lowerclass" ]
+    set temp-work one-of workplaces with [ adults-at-work < max-employees  and class = "lowerclass" ]
+
+]
+[
+    ifelse adult-class = "middleclass"[ 
+   
+     set temp-work one-of workplaces with [ adults-at-work < max-employees and class = "middleclass" ]
+     set temp-house one-of houses with [adults-living-here < max-adults-living-here  and class = "middleclass"]
+
+    ] [ 
+         set temp-house one-of houses with [adults-living-here < max-adults-living-here and class = "upperclass" ]
+         
+         set temp-work one-of workplaces with [adults-at-work < max-employees and class = "upperclass" ]
+     
+    ]
+    ]
+  
+  let str adult-class
+  if temp-work = nobody [ set temp-work one-of workplaces ]
+  if temp-house = nobody [ set temp-house one-of houses ]
+  
+  move-to temp-house
+  add-belief create-belief "home" temp-house
+  let x 0 let y 0
+  ask patch-here [ set x pxcor set y pycor ]
+  set home-address list x y 
+  ask temp-house [set adults-living-here adults-living-here + 1 ]
+  add-belief create-belief "home-address" home-address
+  
+  
+  move-to temp-work
+  add-belief create-belief "work" temp-work
+  ask patch-here [ set x pxcor set y pycor ]
+  set work-address list x y 
+  ask temp-work [set adults-at-work adults-at-work + 1] 
+  add-belief create-belief "work-address" work-address
+  
+  let temp-salary [salary] of temp-work ;set salary 
+  set income temp-salary 
+;  add-belief create-belief "income" income
+  set money random 1000
+;  add-belief create-belief "money" money
+  
+  ; Status kan bero på var de bor (de kan få en grundscore beroende på var de bor, sen kan man addera en viss summa beroende på pengar )
+  let temp-status income / 70 + money / 1000
+  set status temp-status
+    
+  add-belief create-belief "status" status
+  setxy random-xcor random-ycor
+  add-belief create-belief "at-home" false 
+  add-belief create-belief "current-location" patch-here
+  add-belief create-belief "wants-to-go-home" false
+  add-belief create-belief "at-work" false
+
+  
+ 
 end
-to deliberateIntentions-adult
+
+to idle    
+end
+
+
+
+to order-drugs
+
+ let msg create-message "request" 
+ set msg add-content (list ("orderDrugs") 0) msg
+ let id [who] of one-of adult-gangsters
+ set msg add-receiver id msg
+ send msg
+ add-belief create-belief "drugs-ordered" true
+  
+  
+end
+
+to-report drugs-ordered 
+  report true
+end
+
+
+to deliberate 
+  let cravings 0 
+  let has-drugs false
+ ; lägg någonstans in att om man är sjuk, ska man bli frisk. Kan fortfarande handla droger dock men idle är förbjudet.
+  ifelse exist-beliefs-of-type "drug-cravings" and money >= 30
+  [
+    set cravings belief-content read-first-belief-of-type "drug-cravings"
+    ifelse cravings > 90 
+    [
+      add-intention "plan-drugs" "plan-drugs-done"  
+    ]  
+    [
+      ifelse cravings >= 20 and ( time < 4 or time >= 17) and money > 100  ; de kan inte handle droger för nära tiden jobbet börjar, men de får handla på kvällen
+      [
+        add-intention "plan-drugs" "plan-drugs-done"
+      ][ add-intention "idle" "not-idle" ]
+    ]
+  ]
+  [
+    let content belief-content read-first-belief-of-type "wants-to-go-home"
+    ifelse content = true 
+    [
+    add-intention "go-home" "at-home"
+    ]
+    [
+    add-intention "idle" "not-idle"    
+    ]
+  ]
+  
+end
+
+to collect-drugs
+  walk-to-turtle belief-content read-first-belief-of-type "drug-location" 
+  ;if exist-beliefs-of-type 
+end
+
+to-report drugs-collected
+  let location [plocation] of belief-content read-first-belief-of-type "drug-location"  
+  ifelse patch-here = location [
+   
+    remove-belief read-first-belief-of-type "drug-location"
+;    add-belief create-belief "drugs-collected" true 
+    update-belief create-belief "has-drugs" true
+    add-belief create-belief "carrying-drugs" true
+    
+ 
+    let amount  belief-content read-first-belief-of-type "drug-amount"
+    set amount amount + 3
+    set money money - 30
+    update-belief create-belief "drug-amount" amount
+    set color 125
+   
+    report true] [ report false ]
+end
+
+
+to plan-drugs
+  ; kolla om man har droger. i så fall, lägg till consume-drugs
+  ; annars, lägg till order-drugs
+  ; TODO: kolla så att man har råd att köpa droger! om man inte har råd, ta reconsider och ta bort planen. lägg till plan plan-work.
+  ; kolla om man känner till drug-location
+  ; om man känner till drug-location, lägg till collect-drugs
+  ; kolla om arrested, sick eller något annat är sant. om planen måste ändras, gör reconsider. I reconsider, ta bort current-intention.
+  ; eller ta bort två gånger, så stacken blir tom. Lägg sedan till gå till fängelse eller liknande.
+  
+  let possession belief-content read-first-belief-of-type "has-drugs" 
+  ifelse possession = true 
+  [ 
+    ifelse belief-content read-first-belief-of-type "at-home" = false
+    [
+      add-intention "go-home" "at-home"]
+   [ 
+      add-intention "consume-drugs" "drugs-consumed" ]
+  ]
+  [
+    ifelse not exist-beliefs-of-type "drugs-ordered"
+     [ 
+        add-intention  "order-drugs" "drugs-ordered"
+     ]
+     [
+     
+      if exist-beliefs-of-type "drug-location" [ ;blir sann först när man fått svar. Man väntar här tills den blir sann.
+        add-intention "collect-drugs" "drugs-collected"
+        remove-belief read-first-belief-of-type "drugs-ordered"
+        
+        
+      ]
+ ;     if exist-beliefs-of-type "drugs-collected" [
+;      add-intention "go-home" "at-home"
+ ;     ]
+      ;när droger blir hämtade kommer man sätta has-drugs till sant. Då kommer possession vara sant vid nästa tick, och 
+      ;consume-drugs kommer läggas till. När consume-drugs är klart, kommer man exita planen.
+    ]
+  ]
+  
+end
+
+to-report plan-drugs-done
+  ifelse exist-beliefs-of-type "drugsconsumed" [
+    remove-belief read-first-belief-of-type "drugsconsumed"
+   
+
+    set color orange
+    report true  ] 
+   [report false]
+end
+
+to plan-work
+  ; kolla om klockan är 8
+  ; om klockan är 8, lägg till intention go-to-work
+  ;   om at-work, lägg till intention work
+  ;      om work-finished, lägg till belief free from work
+  ;         om sugen på droger, lägg till plan-drugs.
+  ; när ska man gå hem: vid observe environment och revise beliefs, kan man slumpa fram att 
+  ; de vill gå hem. Man får då ett belief "wants-to-go-home" och när man kör deliberation, kommer
+  ; man att lägga till go-home.
+  
+end
+
+to-report plan-work-done 
+end
+
+to consume-drugs
+   
+  let amount belief-content read-first-belief-of-type "drug-amount" 
+  set amount amount - 1 
+  update-belief create-belief "drug-amount" amount
+  let use belief-content read-first-belief-of-type "drug-use" 
+  set use use * 101 / 100
+  update-belief create-belief "drug-use" use 
+ 
+ if exist-beliefs-of-type "carrying-drugs" [
+    remove-belief read-first-belief-of-type "carrying-drugs"
+    
+  ] 
+
+  if amount = 0 [ ; om mängden är noll, sätt has-drugs till falskt
+     update-belief create-belief "has-drugs" false
+  ]
+
+  update-belief create-belief "drug-cravings" 0
+  if not exist-beliefs-of-type "drugsconsumed"
+  [ 
+    add-belief create-belief "drugsconsumed" true
+  ]
+
+
+end
+
+
+to-report drugs-consumed    
+  report true
+end
+
+to-report not-idle
+  let atwork belief-content read-first-belief-of-type "at-work"
+  ifelse time = 8 or ( time > 8 and time < 17 and atwork =  false )
+  [
+    add-intention "go-to-work" "at-work"
+  ]
+  [
+    if exist-beliefs-of-type "drug-cravings" and money > 100 [
+      let cravings belief-content read-first-belief-of-type "drug-cravings"
+      if cravings >= 20 and ( time < 4 or time >= 17)  ; de kan inte handle droger för nära tiden jobbet börjar, men de får handla på kvällen
+      [
+        report true
+      ]
+    ]
+  ]
+  
+  
+   report false 
+  
+end
+
+to go-to-work 
+  walk-to-place work-address 
+end
+
+to walk-to-turtle [id]
+  face id
+  fd 1  
+end
+
+to walk-to-place [destination]
+  facexy first destination last destination ;
+  fd 1
+end
+
+to-report at-work
+;  let location [plocation] of belief-content read-first-belief-of-type "work"
+  
+ ; ifelse patch-here = location [
+  let x first work-address let y last work-address
+  ifelse patch-here = patch x y 
+    [add-intention "work" "workday-finished"
+     update-belief create-belief "at-work" true
+    report true ] [ report false ]
+ 
+end
+
+to work   
+end
+
+to-report workday-finished
+  ifelse time >= 17 [
+    add-intention "go-home" "at-home"
+    update-belief create-belief "at-work" false
+    report true ]
+  [report false ]
+end
+
+to go-home 
+  walk-to-turtle belief-content read-first-belief-of-type "home"
+end
+
+to-report at-home
+  ifelse  patch-here = patch item 0 home-address item 1 home-address 
+  [ update-belief create-belief "at-home" true
+    update-belief create-belief "wants-to-go-home" false
+    report true ]
+  [report false  ]
+end
+  
+to check-messages
+ let temp-bool true
+  while [ temp-bool = true ]
+ [
+    
+    let msg get-message
+    if msg = "no_message" [set temp-bool false 
+      stop]  
+    show msg
+    let perf get-performative msg
+
+    if member? "content:" msg
+    [
+      let content get-content msg
+      if perf = "inform"  
+      [
+        ifelse  first content = "drug-location" [
+          add-belief create-belief "drug-location" item 1 content ;OBS! är en turtle
+        ][ 
+          ifelse first content = "stop-police" [
+            handle-stop-police-msg msg ] 
+          [
+            ifelse first content =  "you are under arrest" [
+              add-belief create-belief "arrested" true
+              add-belief create-belief "officer-id" turtle read-from-string get-sender msg
+              show belief-content read-first-belief-of-type "officer-id"
+
+            ][
+              ifelse first content = "you are free to go" [ 
+              add-belief create-belief "free-to-go" true ]
+            [ 
+                ifelse first content = "at-prison" [
+                  remove-belief read-first-belief-of-type "officer-id"
+                  add-belief create-belief "at-prison" true
+                  set imprisonedAdult true
+                  
+                ][ ;;else . . .
+                  ifelse first content = "wannajoinGang"
+                  [
+                    handle-recruitmentmsg msg
+                  ][]
+                ]
+            ]
+          ] 
+         ]
+        ] ; slut på else om det inte är drug-location 
+      ] ; slut på inform
+    ]  ; slut på ifall det finns content    
+ ] ; slut på while-loop
+
+             
+
+end
+
+to handle-stop-police-msg [msg]
+  set stopped true
+  add-belief create-belief "stopped-by-police" true
+  add-intention "stopped-by-police" "no-longer-stopped"
+  let carrying true ;;;OBS!!!! Raden nedan är bara utkommenterad i testsyfte. Ändra true till false i denna rad när test är slut
+;  if exist-beliefs-of-type "carrying-drugs"[ set carrying belief-content read-first-belief-of-type "carrying-drugs"]  
+  let reply create-reply "inform" msg    
+  set reply add-content (list ("drug-possession") carrying) reply                      
+  send reply
+  
+end
+
+to stopped-by-police  
+end
+
+to-report no-longer-stopped
+   ifelse exist-beliefs-of-type "arrested" 
+  [ remove-belief read-first-belief-of-type "stopped-by-police"
+    set stopped false
+    report true
+  ]
+  [
+    ifelse exist-beliefs-of-type "free-to-go"
+    [ remove-belief read-first-belief-of-type "stopped-by-police"
+      set stopped false
+      set imprisonedAdult true
+      report true]
+    [report false ]
+  ]
+end
+
+
+to humanBehaviour-adults
+end
+
+to observeEnvironment-adults
+   
+  if exist-beliefs-of-type "drug-cravings"[
+    let cravings belief-content read-first-belief-of-type "drug-cravings"
+    let use belief-content read-first-belief-of-type "drug-use"
+    ; drug-use är mellan 70 och 100. Öka cravings olika mycket beroende på drug-use
+    set cravings cravings + use / 100   
+    update-belief create-belief "drug-cravings" cravings 
+     
+    
+  ]
+  update-belief create-belief "current-location" patch-here
+  let location [plocation] of belief-content read-first-belief-of-type "home"
+  if  patch-here != location [
+     update-belief create-belief "at-home" false
+     let rand random 100
+     if rand > 50 [ 
+       update-belief create-belief "wants-to-go-home" true 
+    ] 
+  ]
+  ifelse not exist-beliefs-of-type "sick" [
+    let sick random 1000
+    if sick = 13 [ add-belief create-belief "react-sick" true ] 
+  ][
+    let healthy random 10
+    if healthy = 7 [ remove-belief read-first-belief-of-type "sick"]
+  ]
+  
+end
+ 
+to find-job
+end
+to-report job-found
+  report false
+end
+to handle-recruitmentmsg [msg]
+  let content get-content msg
+  let nstatus first content
+  let trist 0 ; OBS! tristvärde ska finnas som belief, och ska uppdateras varje tick, men det finns inte än
+  let reply create-reply "inform" msg
+  ifelse trist > 50 [
+    ;tristvärde är högt. skicka decline.
+    set reply add-content (list "decline" 0 ) reply
+  ][
+        ;tristvärde är lågt.
+    ifelse nstatus > myStatus [
+      ; join gang. skicka accept, eller något, och sätt global variabel recruited-turtle till self.
+      set reply add-content (list "accept" 0) reply
+      
+    ][
+      ;decline. skicka decline.
+      set reply add-content (list "decline" 0 ) reply
+    ]
+  ]
+  send msg  
+end
+to plan-prison
+  ;if not at prison, follow cop
+  ;
+ 
+  ifelse belief-content read-first-belief-of-type "at-prison" = true [
+    let bel read-first-belief-of-type "ticks-left-of-sentence"
+    let sentence-ticks belief-content bel
+    show sentence-ticks
+    set sentence-ticks sentence-ticks - 1
+    update-belief create-belief "ticks-left-of-sentence" sentence-ticks
+    ;minska dagar i days-left-of-sentence med 1. 
+  ][
+    go-with belief-content read-first-belief-of-type "officer-id"  ;beliefet officer-id tas bort i check-messages. 
+  ]
+end
+to-report plan-prison-done
+  if belief-content read-first-belief-of-type "ticks-left-of-sentence" = 0 [ 
+    remove-belief read-first-belief-of-type "ticks-left-of-sentence"
+    remove-belief read-first-belief-of-type "at-prison"
+    set imprisonedAdult false
+    report true
+  
+] 
+  report false
+end
+
+to get-well
+end
+to-report well
+  report false
+end
+
+to go-with [id]
+  face id fd 1
+end
+
+to-report reactiveIntention-adult
+  ifelse exist-beliefs-of-type "arrested" 
+  [
+   
+      set intentions ([])
+      remove-belief read-first-belief-of-type "arrested"
+      add-intention "plan-prison" "plan-prison-done"
+      add-belief create-belief "at-prison" false ;ska sättas till sant när man mottar ett meddelande från polis om att man är framme.
+      add-belief create-belief "ticks-left-of-sentence" 240 ; ca 10 dagar.
+    
+    report true
+  ]
+  [
+    ifelse exist-beliefs-of-type "paranoid-about-cops" 
+    [
+    ; gör något, typ fly, töm inte intentioner
+      report true
+    ]
+    
+   [ 
+      ifelse exist-beliefs-of-type "react-sick"
+      [ set intentions ([]) 
+        update-belief create-belief "wants-to-go-home" true
+        remove-belief read-first-belief-of-type "react-sick"
+        add-belief create-belief "sick" true
+      ]
+       [report false]
+  ] 
+  ]
+  report false
 end
