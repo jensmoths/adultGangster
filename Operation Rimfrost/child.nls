@@ -1,3 +1,13 @@
+children-own[beliefs
+  intentions
+  incoming-queue
+  observeEnvironment
+  processMsg
+  reactiveIntention
+  deliberateIntentions
+  status
+]
+
 to setup-children
 create-children 1[
     set beliefs ([])

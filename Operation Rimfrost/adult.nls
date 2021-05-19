@@ -6,6 +6,14 @@ imprisonedAdult
 stopped
 unarrestable
 mystatus
+  beliefs
+  intentions
+  incoming-queue
+  observeEnvironment
+  processMsg
+  reactiveIntention
+  deliberateIntentions
+  status
 
 ]
 
@@ -141,8 +149,7 @@ to setup-home-work
  
 end
 
-to idle    
-end
+
 
 
 

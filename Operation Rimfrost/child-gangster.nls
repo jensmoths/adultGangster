@@ -1,4 +1,12 @@
-child-gangsters-own[recivedmsg typemsg beliefMsg bedtime myschooldestx myschooldesty maxxstatus]
+child-gangsters-own[recivedmsg typemsg beliefMsg bedtime myschooldestx myschooldesty maxxstatus
+beliefs
+  intentions
+  incoming-queue
+  observeEnvironment
+  processMsg
+  reactiveIntention
+  deliberateIntentions
+  status]
 ;Uppdatera status
 to setup-child-gangsters
   

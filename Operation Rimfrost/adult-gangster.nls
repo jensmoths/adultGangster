@@ -1,7 +1,14 @@
 
 
 adult-gangsters-own [
-  
+  beliefs
+  intentions
+  incoming-queue
+  observeEnvironment
+  processMsg
+  reactiveIntention
+  deliberateIntentions
+  status
   money
 ]
 
@@ -27,7 +34,9 @@ create-adult-gangsters nbr-of-adult-gangsters[
     add-belief create-belief "othergangHideouts" []
     add-belief create-belief "othergangMembers" []
     add-belief create-belief "policeIsNearby" []
-    add-belief create-belief "energy" 20
+    add-belief create-belief "nearestStashHouse" 0
+    add-belief create-belief "askedAdults" [] 
+
     let R random 100
     ifelse R < 33 [
       
@@ -56,12 +65,85 @@ create-adult-gangsters nbr-of-adult-gangsters[
    let gang belief-content read-first-belief-of-type "gang"
    add-belief create-belief "gangHideouts" [self] of gang-hideouts with [color = gang]
   ]
+update-gangmemberlist  
+end
+
+to createNewAdultGangster [newgang territory oldmoney]
+  create-adult-gangsters 1[
+    set processMsg "processMsgAdultGangster"
+    set deliberateIntentions "deliberateIntentionsAdultGangster"
+    set observeEnvironment "observeEnvironmentAdultGangster"
+    set beliefs ([])
+    set intentions ([])
+    set incoming-queue ([])
+    set size 3
+    set shape "mario gangster"
+    set status 1
+    add-belief create-belief "gang" newgang
+    add-belief create-belief "territory" territory
+    set money oldmoney
+    
+    set color belief-content  read-first-belief-of-type "gang" 
+    add-belief create-belief "gangMembers" []
+    add-belief create-belief "othergangHideouts" []
+    add-belief create-belief "othergangMembers" []
+    add-belief create-belief "policeIsNearby" []
+    add-belief create-belief "nearestStashHouse" 0
+    add-belief create-belief "askedAdults" []
+    
+   
+   
+   move-to belief-content read-first-belief-of-type "home"
+   ask belief-content read-first-belief-of-type "home" [
+   set adult-gangsters-living-here 1
+   ] 
+   let gang belief-content read-first-belief-of-type "gang"
+   add-belief create-belief "gangHideouts" [self] of gang-hideouts with [color = gang]
+  ]
 update-gangmemberlist
-  
+end 
+
+to update-gangmemberlist
+  ask adult-gangsters[
+    let gang belief-content read-first-belief-of-type "gang"
+    update-belief create-belief "gangMembers" adult-gangsters with [color = gang];; updatera allas gangMembers
+  ]
+end
+to update-ganghideoutlist[gangColor]
+  ask adult-gangsters with [color = gangColor][
+    let gang belief-content read-first-belief-of-type "gang"
+    update-belief create-belief "gangHideouts" [self] of gang-hideouts with [color = gang]
+  ]
+end
+to add-othergangmember-to-list
+  let gang belief-content read-first-belief-of-type "gang"
+  foreach [self] of other adult-gangsters in-radius 2[x ->
+    ;;if not (belief-content read-first-belief-of-type "othergangMembers" member? )[
+      update-belief create-belief "othergangMembers" lput x belief-content read-first-belief-of-type "othergangMembers"
+  ]
+end
+
+to add-otherganghideout-to-list
+  let gang belief-content read-first-belief-of-type "gang"
+  foreach [self] of other gang-Hideouts-here[x ->
+    update-belief create-belief "othergangHideouts" lput x belief-content read-first-belief-of-type "othergangHideouts"
+  ]
 end
 
 to observeEnvironmentAdultGangster
+    checkTimeAndPlace
+  observeIfPoliceIsNearby
+    let gang belief-content read-first-belief-of-type "gang"
+    if(count adult-gangsters in-radius 7 with [color != gang] != 0)[
+      add-othergangmember-to-list
+    ]
+  
+  
 end
+
+
+
+
 
 to processMsgAdultGangster
   if not empty? incoming-queue [
@@ -125,6 +207,21 @@ to deliberateIntentionsAdultGangster
   [
     add-intention "prisonState" "imprisoned"
   ]  
+  if exist-beliefs-of-type "go"
+  [
+    let content belief-content get-belief "go"
+    if content = "home"[
+    add-intention "gohomeAdultGangster" "true"
+    ]
+    if content = "stashhouse"[
+      add-intention "goToStashHouse" "true"
+      
+    ]
+  ]
+  if exist-beliefs-of-type "policeIsNearby"
+  [
+    add-intention "policeAround" "true"
+  ]   
 end
 
 
@@ -134,7 +231,7 @@ to prisonState
   let copyofprisoners []
   ask adults [if imprisonedAdult [ set copyofprisoners fput who copyofprisoners]]
 
-  add-belief create-belief "askedAdults" [] 
+  
   let asked belief-content read-first-belief-of-type "askedAdults"
   foreach asked  [ i -> set copyofprisoners remove i copyofprisoners]
   if not empty? copyofprisoners
@@ -244,105 +341,63 @@ end
 
 
 
-to update-gangmemberlist
-  ask adult-gangsters[
-    let gang belief-content read-first-belief-of-type "gang"
-    update-belief create-belief "gangMembers" adult-gangsters with [color = gang];; updatera allas gangMembers
-  ]
-end
-
-to update-ganghideoutlist[gangColor]
-  ask adult-gangsters with [color = gangColor][
-    let gang belief-content read-first-belief-of-type "gang"
-    update-belief create-belief "gangHideouts" [self] of gang-hideouts with [color = gang]
-  ]
-end
-
-to add-othergangmember-to-list
-  let gang belief-content read-first-belief-of-type "gang"
-  foreach [self] of other adult-gangsters-here[x ->
-    update-belief create-belief "othergangMembers" lput x belief-content read-first-belief-of-type "othergangMembers"
-  ]
-end
-
-to add-otherganghideout-to-list
-  let gang belief-content read-first-belief-of-type "gang"
-  foreach [self] of other adult-gangsters-here[x ->
-    update-belief create-belief "othergangHideouts" lput x belief-content read-first-belief-of-type "othergangHideouts"
-  ]
-end
-
-to observeEnvironment_adultgangster
-  ask adult-gangsters[
-    let gang belief-content read-first-belief-of-type "gang"
-    if(adult-gangsters with [color != gang]  != 0)[
-      ask adult-gangsters-here with [color != gang][
-        add-othergangmember-to-list
-      ]
-    ]
-  ]
-end
 ;************************************** AMMARS KOD *****************************************
 to observeIfPoliceIsNearby
-  ask adult-gangsters[
+
     if any? police in-radius 3[
-      update-belief create-belief "policeIsNearby" count police in-radius 3
-    ]
-  ]
-end
-
-to fillUpEnergy
-  update-belief create-belief "energy" belief-content read-first-belief-of-type "energy" + 10
-end
-
-to checkEnergy
-  ifelse (belief-content read-first-belief-of-type "energy" <= 50)[
-    add-belief create-belief "tired" true
-    add-intention "gohomeAdultGangster" "false"
-  ]
-  [
-    add-belief create-belief "alert" true
-    
-    add-intention "goToStashHouse" "false"
-  ]
-end
-
-to gohomeAdultGangster 
-  if (belief-content read-first-belief-of-type "tired")[
-  move-to belief-content read-first-belief-of-type "home"
-    fillUpEnergy  
-  ]
-  if(distance belief-content read-first-belief-of-type "home" < 1)[
-      add-intention "gohomeAdultGangster" "true"
+      add-belief create-belief "policeIsNearby" count police in-radius 3
     ]
   
+end
+
+to checkTimeAndPlace 
+ let nearestStashouse one-of belief-content read-first-belief-of-type "gangHideouts"
+  
+    foreach belief-content read-first-belief-of-type "gangHideouts" [x -> 
+      if distance nearestStashouse > distance x [
+        set nearestStashouse x
+      ]
+    ]
+   add-belief create-belief "nearestStashHouse" nearestStashouse
+  ifelse((time > 1200))
+  [
+    
+  
+  
+      if distance belief-content read-first-belief-of-type "nearestStashHouse" >= 1[
+      add-belief create-belief "go" "stashhouse"
+        
+      
+    ]
+      ]
+  [if distance belief-content read-first-belief-of-type "home" >= 1[ 
+    add-belief create-belief "go" "home"]]
+  
+    
+  
+  
+  
+end
+
+
+to gohomeAdultGangster 
+  face belief-content read-first-belief-of-type "home"
+  fd 1
+
+
 end
 
 to policeAround
-  ifelse(belief-content read-first-belief-of-type "policeIsNearby" > 1)[
-    ; arrested
-  ][
-  set heading heading + 180  
-   while[belief-content read-first-belief-of-type "policeIsNearby" != 0][
-    bk 1
-    forward 0.05
-   ]
- ]
+  face one-of police in-radius 3
+  right random 100 + 120
+  forward 1
+ 
 end
 
 to goToStashHouse
-  
-  let nearestStashouse one-of gang-hideouts
-  foreach belief-content read-first-belief-of-type "gangHideouts" [x -> 
-    if distance nearestStashouse > distance x[
-     set nearestStashouse x
-    ]
-  ]
-  
-  if(belief-content read-first-belief-of-type "alert")[
-    face nearestStashouse
-    fd 0.05
-    
-  ]
-  
+ 
+  face belief-content get-belief  "nearestStashHouse"  
+  fd 1
+
+
 end
