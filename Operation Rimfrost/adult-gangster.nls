@@ -33,7 +33,6 @@ create-adult-gangsters nbr-of-adult-gangsters[
     add-belief create-belief "gangMembers" []
     add-belief create-belief "othergangHideouts" []
     add-belief create-belief "othergangMembers" []
-    add-belief create-belief "policeIsNearby" []
     add-belief create-belief "nearestStashHouse" 0
     add-belief create-belief "askedAdults" [] 
 
@@ -87,7 +86,6 @@ to createNewAdultGangster [newgang territory oldmoney]
     add-belief create-belief "gangMembers" []
     add-belief create-belief "othergangHideouts" []
     add-belief create-belief "othergangMembers" []
-    add-belief create-belief "policeIsNearby" []
     add-belief create-belief "nearestStashHouse" 0
     add-belief create-belief "askedAdults" []
     
@@ -192,6 +190,10 @@ to processMsgAdultGangster
 end
 
 to deliberateIntentionsAdultGangster
+  if exist-beliefs-of-type "policeIsNearby"
+  [
+    add-intention "policeAround" "true"
+  ] 
   if exist-beliefs-of-type "wantsDrugs"
   [
     let belief get-belief "wantsDrugs" 
@@ -205,7 +207,7 @@ to deliberateIntentionsAdultGangster
   ]
   if exist-beliefs-of-type "inPrison"
   [
-    add-intention "prisonState" "imprisoned"
+    add-intention "prisonStateAdultGangster" "imprisoned"
   ]  
   if exist-beliefs-of-type "go"
   [
@@ -214,24 +216,18 @@ to deliberateIntentionsAdultGangster
     add-intention "gohomeAdultGangster" "true"
     ]
     if content = "stashhouse"[
-      add-intention "goToStashHouse" "true"
-      
+      add-intention "goToStashHouse" "true"     
     ]
-  ]
-  if exist-beliefs-of-type "policeIsNearby"
-  [
-    add-intention "policeAround" "true"
-  ]   
+  ]  
 end
 
 
 
-to prisonState
+to prisonStateAdultGangster
   let msg create-message "request"
   let copyofprisoners []
   ask adults [if imprisonedAdult [ set copyofprisoners fput who copyofprisoners]]
 
-  
   let asked belief-content read-first-belief-of-type "askedAdults"
   foreach asked  [ i -> set copyofprisoners remove i copyofprisoners]
   if not empty? copyofprisoners
@@ -322,82 +318,51 @@ end
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ;************************************** AMMARS KOD *****************************************
 to observeIfPoliceIsNearby
-
     if any? police in-radius 3[
       add-belief create-belief "policeIsNearby" count police in-radius 3
-    ]
-  
+    ] 
 end
 
 to checkTimeAndPlace 
- let nearestStashouse one-of belief-content read-first-belief-of-type "gangHideouts"
+  let nearestStashouse one-of belief-content read-first-belief-of-type "gangHideouts"
   
-    foreach belief-content read-first-belief-of-type "gangHideouts" [x -> 
-      if distance nearestStashouse > distance x [
-        set nearestStashouse x
-      ]
+  foreach belief-content read-first-belief-of-type "gangHideouts" [x -> 
+    if distance nearestStashouse > distance x [
+      set nearestStashouse x
     ]
-   add-belief create-belief "nearestStashHouse" nearestStashouse
+  ]
+  add-belief create-belief "nearestStashHouse" nearestStashouse
   ifelse((time > 1200))
-  [
-    
-  
-  
-      if distance belief-content read-first-belief-of-type "nearestStashHouse" >= 1[
+  [ 
+    if distance belief-content read-first-belief-of-type "nearestStashHouse" >= 1[
       add-belief create-belief "go" "stashhouse"
-        
-      
     ]
-      ]
-  [if distance belief-content read-first-belief-of-type "home" >= 1[ 
-    add-belief create-belief "go" "home"]]
-  
-    
-  
-  
-  
+  ]
+  [
+    if distance belief-content read-first-belief-of-type "home" >= 1[ 
+      add-belief create-belief "go" "home"
+    ]
+  ]
+ 
 end
 
 
 to gohomeAdultGangster 
   face belief-content read-first-belief-of-type "home"
   fd 1
-
-
 end
 
 to policeAround
-  face one-of police in-radius 3
-  right random 100 + 120
-  forward 1
- 
+  if any? police in-radius 3[
+    face one-of police in-radius 3
+    right random 100 + 120
+    forward 1 
+  ]
 end
 
-to goToStashHouse
- 
+to goToStashHouse 
   face belief-content get-belief  "nearestStashHouse"  
   fd 1
-
-
 end
