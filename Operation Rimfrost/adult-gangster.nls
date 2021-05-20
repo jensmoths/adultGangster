@@ -18,6 +18,7 @@ create-adult-gangsters nbr-of-adult-gangsters[
     set processMsg "processMsgAdultGangster"
     set deliberateIntentions "deliberateIntentionsAdultGangster"
     set observeEnvironment "observeEnvironmentAdultGangster"
+    set reactiveIntention "reactiveIntentionAdultGangster"
     set beliefs ([])
     set intentions ([])
     set incoming-queue ([])
@@ -35,28 +36,33 @@ create-adult-gangsters nbr-of-adult-gangsters[
     add-belief create-belief "othergangMembers" []
     add-belief create-belief "nearestStashHouse" 0
     add-belief create-belief "askedAdults" [] 
-
+    let temp-house 0
     let R random 100
     ifelse R < 33 [
       
       add-belief create-belief "territory" "lowerclass"
-      add-belief create-belief "home" one-of houses with [adult-gangsters-living-here = 0 and class = "lowerclass"]
+      ;;add-belief create-belief "home" one-of houses with [adult-gangsters-living-here = 0 and class = "lowerclass"]
+      set temp-house one-of houses with [adult-gangsters-living-here = 0 and class = "lowerclass"]
       ;;add-belief create-belief "status" 50
       ;;add-belief create-belief "money"
     ]
     [
       ifelse R < 67[
         add-belief create-belief "territory" "middleclass"
-        add-belief create-belief "home" one-of houses with [adult-gangsters-living-here = 0 and class = "middleclass"]
+        ;;add-belief create-belief "home" one-of houses with [adult-gangsters-living-here = 0 and class = "middleclass"]
+        set temp-house one-of houses with [adult-gangsters-living-here = 0 and class = "middleclass"]
         ;;add-belief create-belief "status"
         ;;add-belief create-belief "money"
       ][
         add-belief create-belief "territory" "lowerclass"
-        add-belief create-belief "home" one-of houses with [adult-gangsters-living-here = 0 and class = "upperclass"]
+        ;;add-belief create-belief "home" one-of houses with [adult-gangsters-living-here = 0 and class = "upperclass"]
+        set temp-house one-of houses with [adult-gangsters-living-here = 0 and class = "upperclass"]
         ;;add-belief create-belief "status"
         ;;add-belief create-belief "money"
       ] 
    ]
+    if temp-house = nobody [ set temp-house one-of houses ]
+    add-belief create-belief "home" temp-house
    move-to belief-content read-first-belief-of-type "home"
    ask belief-content read-first-belief-of-type "home" [
      set adult-gangsters-living-here 1
@@ -137,6 +143,10 @@ to observeEnvironmentAdultGangster
     ]
   
   
+end
+
+to-report reactiveIntentionAdultGangster
+  report false
 end
 
 
